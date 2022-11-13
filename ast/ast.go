@@ -140,6 +140,31 @@ func (il *Boolean) expressionNode()      {}
 func (il *Boolean) TokenLiteral() string { return il.Token.Literal }
 func (il *Boolean) String() string       { return il.Token.Literal }
 
+type IfElseExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence []Statement
+	Alternative []Statement
+}
+
+func (il *IfElseExpression) expressionNode()      {}
+func (il *IfElseExpression) TokenLiteral() string { return il.Token.Literal }
+func (il *IfElseExpression) String() string       { return il.Token.Literal }
+func (il *IfElseExpression) ConsequenceString() string {
+	var out bytes.Buffer
+	for _, s := range il.Consequence {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
+func (il *IfElseExpression) AlternativeString() string {
+	var out bytes.Buffer
+	for _, s := range il.Alternative {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
+
 type Program struct {
 	Statements []Statement
 }

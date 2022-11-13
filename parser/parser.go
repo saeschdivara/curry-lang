@@ -59,6 +59,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.TRUE, p.parseBoolean)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.IF, p.parseIfElseExpression)
 
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
@@ -135,9 +136,18 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	name := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 	statement.Name = name
 
-	// TODO: currently skip value
-	for p.curToken.Type != token.SEMICOLON {
+	if p.peekTokenIs(token.ASSIGN) {
 		p.nextToken()
+		p.nextToken()
+		statement.Value = p.parseExpression(LOWEST)
+
+		if !p.expectPeek(token.SEMICOLON) {
+			return nil
+		}
+	} else {
+		if !p.expectPeek(token.SEMICOLON) {
+			return nil
+		}
 	}
 
 	return statement
@@ -242,6 +252,64 @@ func (p *Parser) parseGroupedExpression() ast.Expression {
 		return nil
 	}
 	return exp
+}
+
+func (p *Parser) parseIfElseExpression() ast.Expression {
+	lit := &ast.IfElseExpression{Token: p.curToken}
+	p.nextToken()
+
+	lit.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	p.nextToken()
+
+	lit.Consequence = []ast.Statement{}
+
+	for p.curToken.Type != token.EOF && p.curToken.Type != token.RBRACE {
+		statement := p.parseStatement()
+		if statement != nil {
+			lit.Consequence = append(lit.Consequence, statement)
+		}
+
+		p.nextToken()
+	}
+
+	if p.curToken.Type == token.EOF {
+		return nil
+	}
+
+	p.nextToken()
+
+	if p.curToken.Type == token.ELSE {
+
+		if !p.expectPeek(token.LBRACE) {
+			return nil
+		}
+
+		p.nextToken()
+
+		lit.Alternative = []ast.Statement{}
+
+		for p.curToken.Type != token.EOF && p.curToken.Type != token.RBRACE {
+			statement := p.parseStatement()
+			if statement != nil {
+				lit.Alternative = append(lit.Alternative, statement)
+			}
+
+			p.nextToken()
+		}
+
+		if p.curToken.Type == token.EOF {
+			return nil
+		}
+
+		p.nextToken()
+	}
+
+	return lit
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {

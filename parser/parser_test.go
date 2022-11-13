@@ -29,15 +29,16 @@ func TestLetStatements(t *testing.T) {
 
 	tests := []struct {
 		expectedIdentifier string
+		expectedExpression string
 	}{
-		{"x"},
-		{"y"},
-		{"foobar"},
+		{"x", "5"},
+		{"y", "10"},
+		{"foobar", "838383"},
 	}
 
 	for i, tt := range tests {
 		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tt.expectedIdentifier) {
+		if !testLetStatement(t, stmt, tt.expectedIdentifier, tt.expectedExpression) {
 			return
 		}
 	}
@@ -340,7 +341,59 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	}
 }
 
-func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
+func TestParsingIfElseExpressions(t *testing.T) {
+	infixTests := []struct {
+		input       string
+		condition   string
+		consequence string
+		alternative string
+	}{
+		{"if (5 < 6) { true } else { false }", "(5 < 6)", "true", "false"},
+		{"if (5 < 6) { true }", "(5 < 6)", "true", ""},
+		{"if 5 < 6 { true }", "(5 < 6)", "true", ""},
+		{`
+	if (test == 5) {
+		let x = 5;
+	}
+`, "(test == 5)", "let x = 5;", ""},
+	}
+	for _, tt := range infixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+			return
+		}
+
+		expr, ok := stmt.Expression.(*ast.IfElseExpression)
+		if !ok {
+			t.Fatalf("Expression is not ast.IfElseExpression. got=%T", stmt.Expression)
+			return
+		}
+
+		if expr.Condition.String() != tt.condition {
+			t.Errorf("expr.Condition.String() not '%s'. got=%s", tt.condition, expr.Condition.String())
+		}
+
+		if expr.ConsequenceString() != tt.consequence {
+			t.Errorf("expr.ConsequenceString() not '%s'. got=%s", tt.consequence, expr.ConsequenceString())
+		}
+
+		if expr.AlternativeString() != tt.alternative {
+			t.Errorf("expr.AlternativeString() not '%s'. got=%s", tt.alternative, expr.AlternativeString())
+		}
+	}
+}
+
+func testLetStatement(t *testing.T, s ast.Statement, name string, value string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
 		return false
@@ -356,6 +409,10 @@ func testLetStatement(t *testing.T, s ast.Statement, name string) bool {
 	}
 	if letStmt.Name.TokenLiteral() != name {
 		t.Errorf("letStmt.Name.TokenLiteral() not '%s'. got=%s", name, letStmt.Name.TokenLiteral())
+		return false
+	}
+	if letStmt.Value.String() != value {
+		t.Errorf("letStmt.Value.String() not '%s'. got=%s", value, letStmt.Value.String())
 		return false
 	}
 	return true
