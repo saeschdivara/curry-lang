@@ -393,6 +393,32 @@ func TestParsingIfElseExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingFunctionExpressions(t *testing.T) {
+	infixTests := []struct {
+		input      string
+		parameters string
+		body       string
+	}{
+		{"fn(x, y) { test; }", "(x, y)", "test;"},
+	}
+	for _, tt := range infixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		}
+
+		_, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+			return
+		}
+	}
+}
+
 func TestParsingComplexStatements(t *testing.T) {
 	input := `
 	if (test == 5) {
