@@ -141,7 +141,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		p.nextToken()
 		statement.Value = p.parseExpression(LOWEST)
 
-		if !p.expectPeek(token.SEMICOLON) {
+		_, success := statement.Value.(*ast.IfElseExpression)
+
+		if success || !p.expectPeek(token.SEMICOLON) {
 			return nil
 		}
 	} else {

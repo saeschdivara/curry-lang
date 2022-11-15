@@ -393,6 +393,49 @@ func TestParsingIfElseExpressions(t *testing.T) {
 	}
 }
 
+func TestParsingComplexStatements(t *testing.T) {
+	input := `
+	if (test == 5) {
+		let x = if (f < 5) {
+			let t = 33;
+			40;
+		};
+	} else {
+		let x = if (55 != 5) {
+			40;
+		} else {
+			aaaa;
+		};
+	}
+`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+		return
+	}
+
+	expr, ok := stmt.Expression.(*ast.IfElseExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.IfElseExpression. got=%T", stmt.Expression)
+		return
+	}
+
+	if expr.Condition.String() == "test == 5" {
+		t.Errorf("expr.Condition.String() not '%s'. got=%s", "test == 5", expr.Condition.String())
+		return
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string, value string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
