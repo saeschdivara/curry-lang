@@ -411,9 +411,27 @@ func TestParsingFunctionExpressions(t *testing.T) {
 			t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
 		}
 
-		_, ok := program.Statements[0].(*ast.ExpressionStatement)
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 		if !ok {
 			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+			return
+		}
+
+		expr, ok := stmt.Expression.(*ast.FunctionExpression)
+		if !ok {
+			t.Fatalf("Expression is not ast.FunctionExpression. got=%T", stmt.Expression)
+			return
+		}
+
+		parametersOutput := expr.ParametersString()
+		if parametersOutput != tt.parameters {
+			t.Fatalf("expr.ParametersString() not '%s'. got=%s", tt.parameters, parametersOutput)
+			return
+		}
+
+		functionBodyOutput := expr.BodyString()
+		if functionBodyOutput != tt.body {
+			t.Fatalf("expr.BodyString() not '%s'. got=%s", tt.body, functionBodyOutput)
 			return
 		}
 	}

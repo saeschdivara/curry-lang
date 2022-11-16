@@ -60,6 +60,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfElseExpression)
+	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
@@ -310,6 +311,58 @@ func (p *Parser) parseIfElseExpression() ast.Expression {
 
 		p.nextToken()
 	}
+
+	return lit
+}
+
+func (p *Parser) parseFunctionExpression() ast.Expression {
+	lit := &ast.FunctionExpression{Token: p.curToken}
+
+	if !p.expectPeek(token.LPAREN) {
+		return nil
+	}
+
+	p.nextToken()
+
+	lit.Parameters = []ast.Parameter{}
+
+	for p.curToken.Type != token.RPAREN {
+		identifier := p.parseIdentifier()
+
+		if identifier == nil {
+			p.errors = append(p.errors, "Parameter could not be parsed")
+			return nil
+		}
+
+		lit.Parameters = append(lit.Parameters, ast.Parameter{Name: identifier.String()})
+
+		p.nextToken()
+
+		if p.curToken.Type == token.COMMA {
+			p.nextToken()
+		}
+
+	}
+
+	if !p.expectPeek(token.LBRACE) {
+		return nil
+	}
+
+	p.nextToken()
+
+	for p.curToken.Type != token.RBRACE {
+		stmt := p.parseStatement()
+
+		if stmt == nil {
+			return nil
+		}
+
+		lit.Body = append(lit.Body, stmt)
+
+		p.nextToken()
+	}
+
+	p.nextToken()
 
 	return lit
 }

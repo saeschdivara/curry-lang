@@ -70,7 +70,7 @@ func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
-		return es.Expression.String()
+		return es.Expression.String() + ";"
 	}
 
 	return ""
@@ -160,6 +160,49 @@ func (il *IfElseExpression) ConsequenceString() string {
 func (il *IfElseExpression) AlternativeString() string {
 	var out bytes.Buffer
 	for _, s := range il.Alternative {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
+
+type Parameter struct {
+	Name string
+}
+
+func (p Parameter) String() string {
+	return p.Name
+}
+
+type FunctionExpression struct {
+	Token      token.Token
+	Parameters []Parameter
+	Body       []Statement
+}
+
+func (il *FunctionExpression) expressionNode()      {}
+func (il *FunctionExpression) TokenLiteral() string { return il.Token.Literal }
+func (il *FunctionExpression) String() string       { return il.Token.Literal }
+
+func (il *FunctionExpression) ParametersString() string {
+	var out bytes.Buffer
+	totalParameters := len(il.Parameters) - 1
+	out.WriteString("(")
+
+	for i, s := range il.Parameters {
+		out.WriteString(s.String())
+		if i < totalParameters {
+			out.WriteString(", ")
+		}
+	}
+
+	out.WriteString(")")
+
+	return out.String()
+}
+
+func (il *FunctionExpression) BodyString() string {
+	var out bytes.Buffer
+	for _, s := range il.Body {
 		out.WriteString(s.String())
 	}
 	return out.String()
