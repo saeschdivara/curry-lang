@@ -396,10 +396,12 @@ func TestParsingIfElseExpressions(t *testing.T) {
 func TestParsingFunctionExpressions(t *testing.T) {
 	infixTests := []struct {
 		input      string
+		name       string
 		parameters string
 		body       string
 	}{
-		{"fn(x, y) { test; }", "(x, y)", "test;"},
+		{"fn(x, y) { test; }", "", "(x, y)", "test;"},
+		{"fn foo(x, y) { test; }", "foo", "(x, y)", "test;"},
 	}
 	for _, tt := range infixTests {
 		l := lexer.New(tt.input)
@@ -420,6 +422,11 @@ func TestParsingFunctionExpressions(t *testing.T) {
 		expr, ok := stmt.Expression.(*ast.FunctionExpression)
 		if !ok {
 			t.Fatalf("Expression is not ast.FunctionExpression. got=%T", stmt.Expression)
+			return
+		}
+
+		if expr.Name != tt.name {
+			t.Fatalf("expr.Name not '%s'. got=%s", tt.name, expr.Name)
 			return
 		}
 

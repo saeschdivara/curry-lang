@@ -318,6 +318,12 @@ func (p *Parser) parseIfElseExpression() ast.Expression {
 func (p *Parser) parseFunctionExpression() ast.Expression {
 	lit := &ast.FunctionExpression{Token: p.curToken}
 
+	if p.peekTokenIs(token.IDENT) {
+		p.nextToken()
+		funcNameExpr := p.parseIdentifier()
+		lit.Name = funcNameExpr.String()
+	}
+
 	if !p.expectPeek(token.LPAREN) {
 		return nil
 	}

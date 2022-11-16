@@ -175,6 +175,7 @@ func (p Parameter) String() string {
 
 type FunctionExpression struct {
 	Token      token.Token
+	Name       string
 	Parameters []Parameter
 	Body       []Statement
 }
