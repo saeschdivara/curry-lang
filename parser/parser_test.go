@@ -348,9 +348,9 @@ func TestParsingIfElseExpressions(t *testing.T) {
 		consequence string
 		alternative string
 	}{
-		{"if (5 < 6) { true } else { false }", "(5 < 6)", "true", "false"},
-		{"if (5 < 6) { true }", "(5 < 6)", "true", ""},
-		{"if 5 < 6 { true }", "(5 < 6)", "true", ""},
+		{"if (5 < 6) { true } else { false }", "(5 < 6)", "true;", "false;"},
+		{"if (5 < 6) { true }", "(5 < 6)", "true;", ""},
+		{"if 5 < 6 { true }", "(5 < 6)", "true;", ""},
 		{`
 	if (test == 5) {
 		let x = 5;
