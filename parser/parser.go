@@ -161,11 +161,11 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	statement := &ast.ReturnStatement{
-		Token: p.curToken,
+		Token:       p.curToken,
+		ReturnValue: p.parseExpression(LOWEST),
 	}
 
-	// TODO: currently skip value
-	for p.curToken.Type != token.SEMICOLON {
+	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
 
