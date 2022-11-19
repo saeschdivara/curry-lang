@@ -209,6 +209,33 @@ func (il *FunctionExpression) BodyString() string {
 	return out.String()
 }
 
+type FunctionCallExpression struct {
+	Token        token.Token
+	FunctionExpr Expression
+	Parameters   []Expression
+}
+
+func (il *FunctionCallExpression) expressionNode()      {}
+func (il *FunctionCallExpression) TokenLiteral() string { return il.Token.Literal }
+func (il *FunctionCallExpression) String() string       { return il.Token.Literal }
+
+func (il *FunctionCallExpression) ParametersString() string {
+	var out bytes.Buffer
+	totalParameters := len(il.Parameters) - 1
+	out.WriteString("(")
+
+	for i, s := range il.Parameters {
+		out.WriteString(s.String())
+		if i < totalParameters {
+			out.WriteString(", ")
+		}
+	}
+
+	out.WriteString(")")
+
+	return out.String()
+}
+
 type Program struct {
 	Statements []Statement
 }
