@@ -11,6 +11,8 @@ func Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.Value}
+	case *ast.IfElseExpression:
+		return EvalIfElseExpression(node)
 
 	case *ast.ExpressionStatement:
 		return Eval(node.Expression)
@@ -19,7 +21,7 @@ func Eval(node ast.Node) object.Object {
 		return EvalStatements(node.Statements)
 	}
 
-	return nil
+	return &object.Null{}
 }
 
 func EvalStatements(statements []ast.Statement) object.Object {
@@ -30,4 +32,19 @@ func EvalStatements(statements []ast.Statement) object.Object {
 	}
 
 	return result
+}
+
+func EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
+	conditionResult := Eval(ifElse.Condition)
+	if conditionResult.Type() != object.BOOLEAN_OBJ {
+		return &object.Null{}
+	}
+
+	condition := conditionResult.(*object.Boolean)
+
+	if condition.Value {
+		return EvalStatements(ifElse.Consequence)
+	} else {
+		return EvalStatements(ifElse.Alternative)
+	}
 }

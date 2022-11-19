@@ -35,6 +35,19 @@ func TestEvalBooleanExpression(t *testing.T) {
 	}
 }
 
+func TestEvalIfExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected object.Object
+	}{
+		{"if(true) { true }", &object.Boolean{Value: true}},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testObject(t, evaluated, tt.expected)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
@@ -66,4 +79,19 @@ func testBooleanObject(t *testing.T, obj object.Object, expected bool) bool {
 		return false
 	}
 	return true
+}
+
+func testObject(t *testing.T, obj object.Object, expected object.Object) bool {
+
+	if obj == nil {
+		t.Errorf("object is nil")
+		return false
+	}
+
+	if obj.Type() != expected.Type() {
+		t.Errorf("object is not %T. got=%T (%+v)", expected, obj, obj)
+		return false
+	}
+
+	return false
 }
