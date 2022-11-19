@@ -487,6 +487,112 @@ func TestParsingComplexStatements(t *testing.T) {
 	}
 }
 
+func TestParsingComplexFunctionStatements(t *testing.T) {
+	input := `
+	if (test == 5) {
+		let x = fn() {
+			let foo = fn test(f, t, k) {};
+		};
+	}
+`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+		return
+	}
+
+	expr, ok := stmt.Expression.(*ast.IfElseExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.IfElseExpression. got=%T", stmt.Expression)
+		return
+	}
+
+	if expr.Condition.String() == "test == 5" {
+		t.Errorf("expr.Condition.String() not '%s'. got=%s", "test == 5", expr.Condition.String())
+		return
+	}
+
+	ifBodyStatements := expr.Consequence
+	if len(ifBodyStatements) != 1 {
+		t.Errorf("len(ifBodyStatements) not '%s'. got=%v", "1", len(ifBodyStatements))
+		return
+	}
+
+	letStatement, ok := ifBodyStatements[0].(*ast.LetStatement)
+	if !ok {
+		t.Fatalf("Expression is not ast.letStatement. got=%T", ifBodyStatements[0])
+		return
+	}
+
+	if letStatement.Name.String() != "x" {
+		t.Errorf("letStatement.Name.String() not '%s'. got=%s", "x", letStatement.Name.String())
+		return
+	}
+
+	outerFuncExpr, ok := letStatement.Value.(*ast.FunctionExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.FunctionExpression. got=%T", outerFuncExpr)
+		return
+	}
+
+	if outerFuncExpr.Name != "" {
+		t.Errorf("outerFuncExpr.Name not '%s'. got=%s", "x", outerFuncExpr.Name)
+		return
+	}
+
+	if len(outerFuncExpr.Parameters) != 0 {
+		t.Errorf("len(outerFuncExpr.Parameters) not '%v'. got=%v", 0, len(outerFuncExpr.Parameters))
+		return
+	}
+
+	if len(outerFuncExpr.Body) != 1 {
+		t.Errorf("len(outerFuncExpr.Body) not '%v'. got=%v", 1, len(outerFuncExpr.Body))
+		return
+	}
+
+	innerLetStatement, ok := outerFuncExpr.Body[0].(*ast.LetStatement)
+	if !ok {
+		t.Fatalf("Expression is not ast.LetStatement. got=%T", outerFuncExpr.Body[0])
+		return
+	}
+
+	if innerLetStatement.Name.String() != "foo" {
+		t.Errorf("innerLetStatement.Name.String() not '%s'. got=%s", "x", innerLetStatement.Name.String())
+		return
+	}
+
+	innerFunctionExpr, ok := innerLetStatement.Value.(*ast.FunctionExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.FunctionExpression. got=%T", innerFunctionExpr)
+		return
+	}
+
+	if innerFunctionExpr.Name != "test" {
+		t.Errorf("innerFunctionExpr.Name not '%s'. got=%s", "(f, t, k)", innerFunctionExpr.ParametersString())
+		return
+	}
+
+	if innerFunctionExpr.ParametersString() != "(f, t, k)" {
+		t.Errorf("innerFunctionExpr.ParametersString() not '%s'. got=%s", "(f, t, k)", innerFunctionExpr.ParametersString())
+		return
+	}
+
+	if len(innerFunctionExpr.Body) != 0 {
+		t.Errorf("len(innerFunctionExpr.Body) not '%v'. got=%v", 0, len(innerFunctionExpr.Body))
+		return
+	}
+}
+
 func testLetStatement(t *testing.T, s ast.Statement, name string, value string) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
