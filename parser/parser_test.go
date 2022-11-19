@@ -1,9 +1,9 @@
 package parser
 
 import (
+	"curryLang/ast"
+	"curryLang/lexer"
 	"fmt"
-	"monkeyInterpreter/ast"
-	"monkeyInterpreter/lexer"
 	"testing"
 )
 

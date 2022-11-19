@@ -1,8 +1,8 @@
 package main
 
 import (
+	"curryLang/repl"
 	"fmt"
-	"monkeyInterpreter/repl"
 	"os"
 	"os/user"
 )

@@ -2,7 +2,7 @@ package ast
 
 import (
 	"bytes"
-	"monkeyInterpreter/token"
+	"curryLang/token"
 )
 
 type Node interface {

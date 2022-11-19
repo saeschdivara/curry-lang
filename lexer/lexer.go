@@ -1,7 +1,7 @@
 package lexer
 
 import (
-	"monkeyInterpreter/token"
+	"curryLang/token"
 	"unicode"
 )
 
