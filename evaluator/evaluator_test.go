@@ -112,6 +112,19 @@ func TestEvalIfExpression(t *testing.T) {
 	}
 }
 
+func TestEvalLetStatement(t *testing.T) {
+	l := lexer.New("let foo = 3;")
+	p := parser.New(l)
+	program := p.ParseProgram()
+	engine := ExecutionEngine{}
+
+	engine.Eval(program)
+
+	if len(engine.Variables) != 1 {
+		t.Errorf("Engine should contain 1 variable")
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)

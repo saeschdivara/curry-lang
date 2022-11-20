@@ -10,8 +10,22 @@ var (
 	NULL = &object.Null{}
 )
 
+type Variable struct {
+	Name  string
+	Value object.Object
+}
+
 type ExecutionEngine struct {
-	//
+	Variables       []Variable
+	CurrentStackPos uint32
+}
+
+func (engine *ExecutionEngine) PushStack() {
+	engine.CurrentStackPos = uint32(len(engine.Variables))
+}
+
+func (engine *ExecutionEngine) PopStack() {
+	engine.Variables = engine.Variables[engine.CurrentStackPos:]
 }
 
 func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
@@ -20,6 +34,7 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.Value}
+
 	case *ast.IfElseExpression:
 		return engine.EvalIfElseExpression(node)
 	case *ast.PrefixExpression:
@@ -27,12 +42,27 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	case *ast.InfixExpression:
 		return engine.EvalInfixExpression(node)
 
+	case *ast.LetStatement:
+		return engine.EvalLetStatement(node)
+
 	case *ast.ExpressionStatement:
 		return engine.Eval(node.Expression)
 
 	case *ast.Program:
 		return engine.EvalStatements(node.Statements)
 	}
+
+	return NULL
+}
+
+func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) object.Object {
+	val := engine.Eval(statement.Value)
+	variable := Variable{
+		Name:  statement.Name.Value,
+		Value: val,
+	}
+
+	engine.Variables = append(engine.Variables, variable)
 
 	return NULL
 }
@@ -55,11 +85,19 @@ func (engine *ExecutionEngine) EvalIfElseExpression(ifElse *ast.IfElseExpression
 
 	condition := conditionResult.(*object.Boolean)
 
+	var statements []ast.Statement
+
 	if condition.Value {
-		return engine.EvalStatements(ifElse.Consequence)
+		statements = ifElse.Consequence
 	} else {
-		return engine.EvalStatements(ifElse.Alternative)
+		statements = ifElse.Alternative
 	}
+
+	engine.PushStack()
+	result := engine.EvalStatements(statements)
+	engine.PopStack()
+
+	return result
 }
 
 func (engine *ExecutionEngine) EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
