@@ -10,41 +10,45 @@ var (
 	NULL = &object.Null{}
 )
 
-func Eval(node ast.Node) object.Object {
+type ExecutionEngine struct {
+	//
+}
+
+func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.Value}
 	case *ast.IfElseExpression:
-		return EvalIfElseExpression(node)
+		return engine.EvalIfElseExpression(node)
 	case *ast.PrefixExpression:
-		return EvalPrefixExpression(node)
+		return engine.EvalPrefixExpression(node)
 	case *ast.InfixExpression:
-		return EvalInfixExpression(node)
+		return engine.EvalInfixExpression(node)
 
 	case *ast.ExpressionStatement:
-		return Eval(node.Expression)
+		return engine.Eval(node.Expression)
 
 	case *ast.Program:
-		return EvalStatements(node.Statements)
+		return engine.EvalStatements(node.Statements)
 	}
 
 	return NULL
 }
 
-func EvalStatements(statements []ast.Statement) object.Object {
+func (engine *ExecutionEngine) EvalStatements(statements []ast.Statement) object.Object {
 	var result object.Object
 
 	for _, stmt := range statements {
-		result = Eval(stmt)
+		result = engine.Eval(stmt)
 	}
 
 	return result
 }
 
-func EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
-	conditionResult := Eval(ifElse.Condition)
+func (engine *ExecutionEngine) EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
+	conditionResult := engine.Eval(ifElse.Condition)
 	if conditionResult.Type() != object.BOOLEAN_OBJ {
 		return NULL
 	}
@@ -52,26 +56,26 @@ func EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
 	condition := conditionResult.(*object.Boolean)
 
 	if condition.Value {
-		return EvalStatements(ifElse.Consequence)
+		return engine.EvalStatements(ifElse.Consequence)
 	} else {
-		return EvalStatements(ifElse.Alternative)
+		return engine.EvalStatements(ifElse.Alternative)
 	}
 }
 
-func EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
-	value := Eval(infix.Right)
+func (engine *ExecutionEngine) EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
+	value := engine.Eval(infix.Right)
 
 	if value.Type() == object.BOOLEAN_OBJ {
-		return EvalBooleanPrefixOperations(value.(*object.Boolean), infix.Operator)
+		return engine.EvalBooleanPrefixOperations(value.(*object.Boolean), infix.Operator)
 	}
 	if value.Type() == object.INTEGER_OBJ {
-		return EvalIntegerPrefixOperations(value.(*object.Integer), infix.Operator)
+		return engine.EvalIntegerPrefixOperations(value.(*object.Integer), infix.Operator)
 	}
 
 	return NULL
 }
 
-func EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Object {
+func (engine *ExecutionEngine) EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Object {
 
 	if operator == token.BANG {
 		return &object.Boolean{Value: !val.Value}
@@ -80,7 +84,7 @@ func EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Ob
 	return NULL
 }
 
-func EvalIntegerPrefixOperations(val *object.Integer, operator string) object.Object {
+func (engine *ExecutionEngine) EvalIntegerPrefixOperations(val *object.Integer, operator string) object.Object {
 
 	if operator == token.MINUS {
 		return &object.Integer{Value: -1 * val.Value}
@@ -89,22 +93,22 @@ func EvalIntegerPrefixOperations(val *object.Integer, operator string) object.Ob
 	return NULL
 }
 
-func EvalInfixExpression(infix *ast.InfixExpression) object.Object {
-	left := Eval(infix.Left)
-	right := Eval(infix.Right)
+func (engine *ExecutionEngine) EvalInfixExpression(infix *ast.InfixExpression) object.Object {
+	left := engine.Eval(infix.Left)
+	right := engine.Eval(infix.Right)
 
 	if left.Type() != right.Type() {
 		return NULL
 	}
 
 	if left.Type() == object.INTEGER_OBJ {
-		return EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
+		return engine.EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
 	}
 
 	return NULL
 }
 
-func EvalIntegerInfixOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
+func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
 
 	switch operator {
 	// logical operations

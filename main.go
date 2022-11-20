@@ -37,7 +37,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		evalResult := evaluator.Eval(program)
+		engine := evaluator.ExecutionEngine{}
+		evalResult := engine.Eval(program)
 
 		if evalResult != nil {
 			fmt.Println(evalResult.Inspect())
