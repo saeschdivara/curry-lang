@@ -18,6 +18,8 @@ func Eval(node ast.Node) object.Object {
 		return &object.Boolean{Value: node.Value}
 	case *ast.IfElseExpression:
 		return EvalIfElseExpression(node)
+	case *ast.PrefixExpression:
+		return EvalPrefixExpression(node)
 	case *ast.InfixExpression:
 		return EvalInfixExpression(node)
 
@@ -56,6 +58,25 @@ func EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
 	}
 }
 
+func EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
+	value := Eval(infix.Right)
+
+	if value.Type() == object.BOOLEAN_OBJ {
+		return EvalBooleanPrefixOperations(value.(*object.Boolean), infix.Operator)
+	}
+
+	return NULL
+}
+
+func EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Object {
+
+	if operator == token.BANG {
+		return &object.Boolean{Value: !val.Value}
+	}
+
+	return NULL
+}
+
 func EvalInfixExpression(infix *ast.InfixExpression) object.Object {
 	left := Eval(infix.Left)
 	right := Eval(infix.Right)
@@ -65,13 +86,13 @@ func EvalInfixExpression(infix *ast.InfixExpression) object.Object {
 	}
 
 	if left.Type() == object.INTEGER_OBJ {
-		return EvalIntegerOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
+		return EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
 	}
 
 	return NULL
 }
 
-func EvalIntegerOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
+func EvalIntegerInfixOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
 
 	switch operator {
 	// logical operations

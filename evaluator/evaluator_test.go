@@ -70,6 +70,20 @@ func TestEvalIntegerInfixExpression(t *testing.T) {
 	}
 }
 
+func TestEvalBooleanPrefixExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected bool
+	}{
+		{"!false", true},
+		{"!true", false},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testBooleanObject(t, evaluated, tt.expected)
+	}
+}
+
 func TestEvalIfExpression(t *testing.T) {
 	tests := []struct {
 		input    string
