@@ -6,6 +6,10 @@ import (
 	"curryLang/token"
 )
 
+var (
+	NULL = &object.Null{}
+)
+
 func Eval(node ast.Node) object.Object {
 	switch node := node.(type) {
 	case *ast.IntegerLiteral:
@@ -24,7 +28,7 @@ func Eval(node ast.Node) object.Object {
 		return EvalStatements(node.Statements)
 	}
 
-	return &object.Null{}
+	return NULL
 }
 
 func EvalStatements(statements []ast.Statement) object.Object {
@@ -40,7 +44,7 @@ func EvalStatements(statements []ast.Statement) object.Object {
 func EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
 	conditionResult := Eval(ifElse.Condition)
 	if conditionResult.Type() != object.BOOLEAN_OBJ {
-		return &object.Null{}
+		return NULL
 	}
 
 	condition := conditionResult.(*object.Boolean)
@@ -57,14 +61,14 @@ func EvalInfixExpression(infix *ast.InfixExpression) object.Object {
 	right := Eval(infix.Right)
 
 	if left.Type() != right.Type() {
-		return &object.Null{}
+		return NULL
 	}
 
 	if left.Type() == object.INTEGER_OBJ {
 		return EvalIntegerOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
 	}
 
-	return &object.Null{}
+	return NULL
 }
 
 func EvalIntegerOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
@@ -91,5 +95,5 @@ func EvalIntegerOperations(left *object.Integer, right *object.Integer, operator
 		return &object.Integer{Value: left.Value / right.Value}
 	}
 
-	return &object.Null{}
+	return NULL
 }
