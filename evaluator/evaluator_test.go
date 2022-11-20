@@ -77,6 +77,8 @@ func TestEvalBooleanPrefixExpression(t *testing.T) {
 	}{
 		{"!false", true},
 		{"!true", false},
+		{"!!true", true},
+		{"!!false", false},
 	}
 	for _, tt := range tests {
 		evaluated := testEval(tt.input)
