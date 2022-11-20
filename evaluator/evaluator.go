@@ -34,6 +34,8 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.Value}
+	case *ast.Identifier:
+		return engine.EvalIdentifier(node)
 
 	case *ast.IfElseExpression:
 		return engine.EvalIfElseExpression(node)
@@ -63,6 +65,17 @@ func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) obj
 	}
 
 	engine.Variables = append(engine.Variables, variable)
+
+	return NULL
+}
+
+func (engine *ExecutionEngine) EvalIdentifier(identifier *ast.Identifier) object.Object {
+
+	for _, variable := range engine.Variables {
+		if variable.Name == identifier.Value {
+			return variable.Value
+		}
+	}
 
 	return NULL
 }
