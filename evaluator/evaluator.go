@@ -64,6 +64,9 @@ func EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
 	if value.Type() == object.BOOLEAN_OBJ {
 		return EvalBooleanPrefixOperations(value.(*object.Boolean), infix.Operator)
 	}
+	if value.Type() == object.INTEGER_OBJ {
+		return EvalIntegerPrefixOperations(value.(*object.Integer), infix.Operator)
+	}
 
 	return NULL
 }
@@ -72,6 +75,15 @@ func EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Ob
 
 	if operator == token.BANG {
 		return &object.Boolean{Value: !val.Value}
+	}
+
+	return NULL
+}
+
+func EvalIntegerPrefixOperations(val *object.Integer, operator string) object.Object {
+
+	if operator == token.MINUS {
+		return &object.Integer{Value: -1 * val.Value}
 	}
 
 	return NULL
