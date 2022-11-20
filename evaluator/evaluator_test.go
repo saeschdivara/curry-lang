@@ -53,6 +53,23 @@ func TestEvalBooleanInfixExpression(t *testing.T) {
 	}
 }
 
+func TestEvalIntegerInfixExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"1 + 3", 4},
+		{"1 - 3", -2},
+		{"4 * 3", 12},
+		{"12 / 3", 4},
+		{"13 / 3", 4},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testIntegerObject(t, evaluated, tt.expected)
+	}
+}
+
 func TestEvalIfExpression(t *testing.T) {
 	tests := []struct {
 		input    string

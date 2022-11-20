@@ -70,6 +70,7 @@ func EvalInfixExpression(infix *ast.InfixExpression) object.Object {
 func EvalIntegerOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
 
 	switch operator {
+	// logical operations
 	case token.LT:
 		return &object.Boolean{Value: left.Value < right.Value}
 	case token.GT:
@@ -78,6 +79,16 @@ func EvalIntegerOperations(left *object.Integer, right *object.Integer, operator
 		return &object.Boolean{Value: left.Value == right.Value}
 	case token.NOT_EQ:
 		return &object.Boolean{Value: left.Value != right.Value}
+
+	// arithmetic operations
+	case token.PLUS:
+		return &object.Integer{Value: left.Value + right.Value}
+	case token.MINUS:
+		return &object.Integer{Value: left.Value - right.Value}
+	case token.ASTERISK:
+		return &object.Integer{Value: left.Value * right.Value}
+	case token.SLASH:
+		return &object.Integer{Value: left.Value / right.Value}
 	}
 
 	return &object.Null{}
