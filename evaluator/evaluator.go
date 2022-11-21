@@ -217,17 +217,20 @@ func (engine *ExecutionEngine) EvalIfElseExpression(ifElse *ast.IfElseExpression
 	return result
 }
 
-func (engine *ExecutionEngine) EvalPrefixExpression(infix *ast.PrefixExpression) object.Object {
-	value := engine.Eval(infix.Right)
+func (engine *ExecutionEngine) EvalPrefixExpression(prefix *ast.PrefixExpression) object.Object {
+	value := engine.Eval(prefix.Right)
+	valueType := value.Type()
 
-	if value.Type() == object.BOOLEAN_OBJ {
-		return engine.EvalBooleanPrefixOperations(value.(*object.Boolean), infix.Operator)
+	if valueType == object.BOOLEAN_OBJ {
+		return engine.EvalBooleanPrefixOperations(value.(*object.Boolean), prefix.Operator)
 	}
-	if value.Type() == object.INTEGER_OBJ {
-		return engine.EvalIntegerPrefixOperations(value.(*object.Integer), infix.Operator)
+	if valueType == object.INTEGER_OBJ {
+		return engine.EvalIntegerPrefixOperations(value.(*object.Integer), prefix.Operator)
 	}
 
-	return NULL
+	return engine.createError(
+		fmt.Sprintf("Not supported prefix operator (%s) was used for type %s", prefix.Operator, valueType),
+	)
 }
 
 func (engine *ExecutionEngine) EvalBooleanPrefixOperations(val *object.Boolean, operator string) object.Object {
@@ -236,7 +239,7 @@ func (engine *ExecutionEngine) EvalBooleanPrefixOperations(val *object.Boolean, 
 		return &object.Boolean{Value: !val.Value}
 	}
 
-	return NULL
+	return engine.createError(fmt.Sprintf("Not supported prefix operator (%s) was used for boolean", operator))
 }
 
 func (engine *ExecutionEngine) EvalIntegerPrefixOperations(val *object.Integer, operator string) object.Object {
@@ -245,7 +248,7 @@ func (engine *ExecutionEngine) EvalIntegerPrefixOperations(val *object.Integer, 
 		return &object.Integer{Value: -1 * val.Value}
 	}
 
-	return NULL
+	return engine.createError(fmt.Sprintf("Not supported prefix operator (%s) was used for integer", operator))
 }
 
 func (engine *ExecutionEngine) EvalInfixExpression(infix *ast.InfixExpression) object.Object {
@@ -253,14 +256,17 @@ func (engine *ExecutionEngine) EvalInfixExpression(infix *ast.InfixExpression) o
 	right := engine.Eval(infix.Right)
 
 	if left.Type() != right.Type() {
-		return NULL
+		return engine.createError(
+			fmt.Sprintf("Left and right variable share not the same type(%s and %s)", left.Type(), right.Type()),
+		)
 	}
 
+	operator := infix.Operator
 	if left.Type() == object.INTEGER_OBJ {
-		return engine.EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), infix.Operator)
+		return engine.EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), operator)
 	}
 
-	return NULL
+	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for type %s", operator, left.Type()))
 }
 
 func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
@@ -287,7 +293,7 @@ func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, 
 		return &object.Integer{Value: left.Value / right.Value}
 	}
 
-	return NULL
+	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for integers", operator))
 }
 
 func (engine *ExecutionEngine) createError(message string) *object.Error {
