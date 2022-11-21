@@ -530,6 +530,43 @@ func TestParsingComplexStatements(t *testing.T) {
 	}
 }
 
+func TestParsingAnonymousFunctionCall(t *testing.T) {
+	input := `
+	fn() {} ();
+`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+		return
+	}
+
+	expr, ok := stmt.Expression.(*ast.FunctionCallExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.FunctionCallExpression. got=%T", stmt.Expression)
+		return
+	}
+
+	funcExpr, ok := expr.FunctionExpr.(*ast.FunctionExpression)
+	if !ok {
+		t.Fatalf("Expression is not ast.FunctionExpression. got=%T", expr.FunctionExpr)
+		return
+	}
+
+	if funcExpr.Name != "" {
+		t.Fatalf("funcExpr.Name is not anonymous function. got=%s\n", funcExpr.Name)
+	}
+}
+
 func TestParsingComplexFunctionStatements(t *testing.T) {
 	input := `
 	if (test == 5) {

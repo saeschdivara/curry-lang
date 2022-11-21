@@ -403,7 +403,9 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 		p.nextToken()
 	}
 
-	p.nextToken()
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
 
 	return lit
 }
