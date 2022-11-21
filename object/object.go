@@ -1,13 +1,17 @@
 package object
 
-import "fmt"
+import (
+	"curryLang/ast"
+	"fmt"
+)
 
 type ObjectType string
 
 const (
-	INTEGER_OBJ = "INTEGER"
-	BOOLEAN_OBJ = "BOOLEAN"
-	NULL_OBJ    = "NULL"
+	INTEGER_OBJ  = "INTEGER"
+	BOOLEAN_OBJ  = "BOOLEAN"
+	FUNCITON_OBJ = "FUNCTION"
+	NULL_OBJ     = "NULL"
 )
 
 type Object interface {
@@ -28,6 +32,15 @@ type Boolean struct {
 
 func (i *Boolean) Type() ObjectType { return BOOLEAN_OBJ }
 func (i *Boolean) Inspect() string  { return fmt.Sprintf("%t", i.Value) }
+
+type Function struct {
+	Name       string
+	Parameters []ast.Parameter
+	Code       []ast.Statement
+}
+
+func (function *Function) Type() ObjectType { return FUNCITON_OBJ }
+func (function *Function) Inspect() string  { return fmt.Sprintf("fn %s", function.Name) }
 
 type Null struct{}
 

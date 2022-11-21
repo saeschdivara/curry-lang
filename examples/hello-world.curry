@@ -1,4 +1,9 @@
-let foo = 5;
+fn call() {
+    let kk = 22;
+    return kk;
+};
+
+let foo = call();
 
 if (foo < 6) {
     false;

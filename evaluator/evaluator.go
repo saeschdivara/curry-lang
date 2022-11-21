@@ -18,6 +18,14 @@ type Variable struct {
 type ExecutionEngine struct {
 	Variables       []Variable
 	CurrentStackPos uint32
+
+	Functions map[string]*object.Function
+}
+
+func NewEngine() *ExecutionEngine {
+	engine := ExecutionEngine{}
+	engine.Functions = make(map[string]*object.Function)
+	return &engine
 }
 
 func (engine *ExecutionEngine) PushStack() {
@@ -47,6 +55,12 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	case *ast.LetStatement:
 		return engine.EvalLetStatement(node)
 
+	case *ast.FunctionExpression:
+		return engine.EvalFunctionExpression(node)
+
+	case *ast.FunctionCallExpression:
+		return engine.EvalFunctionCallExpression(node)
+
 	case *ast.ExpressionStatement:
 		return engine.Eval(node.Expression)
 
@@ -67,6 +81,54 @@ func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) obj
 	engine.Variables = append(engine.Variables, variable)
 
 	return NULL
+}
+
+func (engine *ExecutionEngine) EvalFunctionExpression(statement *ast.FunctionExpression) object.Object {
+	function := &object.Function{
+		Name:       statement.Name,
+		Parameters: statement.Parameters,
+		Code:       statement.Body,
+	}
+
+	if statement.Name != "" {
+		engine.Functions[statement.Name] = function
+	}
+
+	return function
+}
+
+func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.FunctionCallExpression) object.Object {
+	functionExpr := engine.Eval(statement.FunctionExpr)
+
+	if functionExpr == NULL {
+		funcIdentifier, ok := statement.FunctionExpr.(*ast.Identifier)
+		if !ok {
+			return NULL
+		}
+
+		functionExpr = engine.Functions[funcIdentifier.Value]
+	}
+
+	function, ok := functionExpr.(*object.Function)
+	if !ok {
+		return NULL
+	}
+
+	engine.PushStack()
+	// add parameters as variables to current stack
+	for i, parameter := range function.Parameters {
+		paramValue := engine.Eval(statement.Parameters[i])
+		engine.Variables = append(engine.Variables, Variable{
+			Name:  parameter.Name,
+			Value: paramValue,
+		})
+	}
+
+	result := engine.EvalStatements(function.Code)
+
+	engine.PopStack()
+
+	return result
 }
 
 func (engine *ExecutionEngine) EvalIdentifier(identifier *ast.Identifier) object.Object {

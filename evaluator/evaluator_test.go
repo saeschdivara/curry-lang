@@ -116,7 +116,7 @@ func TestEvalLetStatement(t *testing.T) {
 	l := lexer.New("let foo = 3;")
 	p := parser.New(l)
 	program := p.ParseProgram()
-	engine := ExecutionEngine{}
+	engine := NewEngine()
 
 	engine.Eval(program)
 
@@ -125,11 +125,41 @@ func TestEvalLetStatement(t *testing.T) {
 	}
 }
 
+func TestEvalFunctionCall(t *testing.T) {
+	result := testEval("fn foo() { 3; }; foo();")
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 3 {
+		t.Errorf("Variable should contain 3")
+	}
+}
+
+func TestEvalFunctionCallWithParameters(t *testing.T) {
+	result := testEval("fn foo(a, b) { a + b; }; foo(4, 5);")
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 9 {
+		t.Errorf("Variable should contain 3")
+	}
+}
+
 func TestEvalIdentifierExpression(t *testing.T) {
 	l := lexer.New("let foo = 3;foo;")
 	p := parser.New(l)
 	program := p.ParseProgram()
-	engine := ExecutionEngine{}
+	engine := NewEngine()
 
 	result := engine.Eval(program)
 
@@ -154,7 +184,7 @@ func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)
 	program := p.ParseProgram()
-	engine := ExecutionEngine{}
+	engine := NewEngine()
 
 	return engine.Eval(program)
 }
