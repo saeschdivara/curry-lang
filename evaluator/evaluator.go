@@ -253,7 +253,14 @@ func (engine *ExecutionEngine) EvalIntegerPrefixOperations(val *object.Integer, 
 
 func (engine *ExecutionEngine) EvalInfixExpression(infix *ast.InfixExpression) object.Object {
 	left := engine.Eval(infix.Left)
+	if engine.HasError {
+		return left
+	}
+
 	right := engine.Eval(infix.Right)
+	if engine.HasError {
+		return right
+	}
 
 	if left.Type() != right.Type() {
 		return engine.createError(
