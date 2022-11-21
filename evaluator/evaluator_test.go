@@ -155,6 +155,39 @@ func TestEvalReturnStatement(t *testing.T) {
 	}
 }
 
+func TestEvalNestedReturnStatements(t *testing.T) {
+	result := testEval(`
+	fn xxx() { 
+	  return 3; 
+	};
+	fn foo() { 
+	  return xxx(); 
+	};
+	fn bar(x) {
+
+      if (x) {
+	  	return foo();
+	  }
+
+      let f = 99;
+      return f;
+	};
+
+	bar(true);
+	`)
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 3 {
+		t.Errorf("Variable should contain 3")
+	}
+}
+
 func TestEvalAnonymousFunctionCall(t *testing.T) {
 	result := testEval("fn() { 3; }();")
 

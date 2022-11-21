@@ -17,23 +17,45 @@ type Variable struct {
 
 type ExecutionEngine struct {
 	Variables       []Variable
-	CurrentStackPos uint32
+	CurrentStackPos []uint32
 
-	Functions map[string]*object.Function
+	Functions         map[string]*object.Function
+	IsReturnTriggered bool
 }
 
 func NewEngine() *ExecutionEngine {
-	engine := ExecutionEngine{}
+	engine := ExecutionEngine{IsReturnTriggered: false}
+	engine.Variables = make([]Variable, 0)
+	engine.CurrentStackPos = make([]uint32, 0)
 	engine.Functions = make(map[string]*object.Function)
 	return &engine
 }
 
 func (engine *ExecutionEngine) PushStack() {
-	engine.CurrentStackPos = uint32(len(engine.Variables))
+	variablesSize := uint32(len(engine.Variables))
+	stackPosLength := len(engine.CurrentStackPos)
+
+	if stackPosLength == 0 {
+		engine.CurrentStackPos = append(engine.CurrentStackPos, variablesSize)
+	} else {
+		currentPos := engine.CurrentStackPos[stackPosLength-1]
+
+		if currentPos != variablesSize {
+			engine.CurrentStackPos = append(engine.CurrentStackPos, variablesSize)
+		}
+	}
 }
 
 func (engine *ExecutionEngine) PopStack() {
-	engine.Variables = engine.Variables[engine.CurrentStackPos:]
+	pos := len(engine.CurrentStackPos) - 1
+
+	if pos == -1 {
+		return
+	}
+
+	currentStackPos := engine.CurrentStackPos[pos]
+	engine.Variables = engine.Variables[:currentStackPos]
+	engine.CurrentStackPos = engine.CurrentStackPos[:pos]
 }
 
 func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
@@ -87,7 +109,9 @@ func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) obj
 }
 
 func (engine *ExecutionEngine) EvalReturnStatement(statement *ast.ReturnStatement) object.Object {
-	return engine.Eval(statement.ReturnValue)
+	result := engine.Eval(statement.ReturnValue)
+	engine.IsReturnTriggered = true
+	return result
 }
 
 func (engine *ExecutionEngine) EvalFunctionExpression(statement *ast.FunctionExpression) object.Object {
@@ -132,6 +156,7 @@ func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.Functio
 	}
 
 	result := engine.EvalStatements(function.Code)
+	engine.IsReturnTriggered = false
 
 	engine.PopStack()
 
@@ -154,6 +179,10 @@ func (engine *ExecutionEngine) EvalStatements(statements []ast.Statement) object
 
 	for _, stmt := range statements {
 		result = engine.Eval(stmt)
+
+		if engine.IsReturnTriggered {
+			break
+		}
 	}
 
 	return result
