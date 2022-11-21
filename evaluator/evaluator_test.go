@@ -243,6 +243,38 @@ func TestEvalIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestEvalErrors(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected object.Object
+	}{
+		{"foo;", &object.Error{Message: "Undeclared variable foo used"}},
+		{"if(foo) {};", &object.Error{Message: "Undeclared variable foo used"}},
+		{"if(true) {foo};", &object.Error{Message: "Undeclared variable foo used"}},
+		{"fn() { foo; } ()", &object.Error{Message: "Undeclared variable foo used"}},
+		{"fn() { foo; return 1; } ()", &object.Error{Message: "Undeclared variable foo used"}},
+		{`
+			fn test() {
+				let x = fn() {
+					foo;
+				}
+
+				if (true) {
+					x();
+				}
+
+                return 1;
+			}
+
+			test();
+		`, &object.Error{Message: "Undeclared variable foo used"}},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testObject(t, evaluated, tt.expected)
+	}
+}
+
 func testEval(input string) object.Object {
 	l := lexer.New(input)
 	p := parser.New(l)

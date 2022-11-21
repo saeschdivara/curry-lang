@@ -4,6 +4,7 @@ import (
 	"curryLang/ast"
 	"curryLang/object"
 	"curryLang/token"
+	"fmt"
 )
 
 var (
@@ -19,8 +20,11 @@ type ExecutionEngine struct {
 	Variables       []Variable
 	CurrentStackPos []uint32
 
-	Functions         map[string]*object.Function
+	Functions map[string]*object.Function
+
+	// engine state flags
 	IsReturnTriggered bool
+	HasError          bool
 }
 
 func NewEngine() *ExecutionEngine {
@@ -130,16 +134,6 @@ func (engine *ExecutionEngine) EvalFunctionExpression(statement *ast.FunctionExp
 
 func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.FunctionCallExpression) object.Object {
 	functionExpr := engine.Eval(statement.FunctionExpr)
-
-	if functionExpr == NULL {
-		funcIdentifier, ok := statement.FunctionExpr.(*ast.Identifier)
-		if !ok {
-			return NULL
-		}
-
-		functionExpr = engine.Functions[funcIdentifier.Value]
-	}
-
 	function, ok := functionExpr.(*object.Function)
 	if !ok {
 		return NULL
@@ -165,13 +159,19 @@ func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.Functio
 
 func (engine *ExecutionEngine) EvalIdentifier(identifier *ast.Identifier) object.Object {
 
+	identifierName := identifier.Value
+
 	for _, variable := range engine.Variables {
-		if variable.Name == identifier.Value {
+		if variable.Name == identifierName {
 			return variable.Value
 		}
 	}
 
-	return NULL
+	if val, ok := engine.Functions[identifierName]; ok {
+		return val
+	}
+
+	return engine.createError(fmt.Sprintf("Undeclared variable %s used", identifier.Value))
 }
 
 func (engine *ExecutionEngine) EvalStatements(statements []ast.Statement) object.Object {
@@ -180,7 +180,7 @@ func (engine *ExecutionEngine) EvalStatements(statements []ast.Statement) object
 	for _, stmt := range statements {
 		result = engine.Eval(stmt)
 
-		if engine.IsReturnTriggered {
+		if engine.IsReturnTriggered || engine.HasError {
 			break
 		}
 	}
@@ -190,8 +190,14 @@ func (engine *ExecutionEngine) EvalStatements(statements []ast.Statement) object
 
 func (engine *ExecutionEngine) EvalIfElseExpression(ifElse *ast.IfElseExpression) object.Object {
 	conditionResult := engine.Eval(ifElse.Condition)
-	if conditionResult.Type() != object.BOOLEAN_OBJ {
-		return NULL
+
+	conditionResType := conditionResult.Type()
+	if conditionResType != object.BOOLEAN_OBJ {
+		if conditionResType == object.ERROR_OBJ {
+			return conditionResult
+		} else {
+			return engine.createError(fmt.Sprintf("Non boolean type (%s) was returned for condition", conditionResType))
+		}
 	}
 
 	condition := conditionResult.(*object.Boolean)
@@ -282,4 +288,9 @@ func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, 
 	}
 
 	return NULL
+}
+
+func (engine *ExecutionEngine) createError(message string) *object.Error {
+	engine.HasError = true
+	return &object.Error{Message: message}
 }

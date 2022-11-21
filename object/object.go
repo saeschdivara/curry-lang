@@ -11,6 +11,7 @@ const (
 	INTEGER_OBJ  = "INTEGER"
 	BOOLEAN_OBJ  = "BOOLEAN"
 	FUNCITON_OBJ = "FUNCTION"
+	ERROR_OBJ    = "ERROR"
 	NULL_OBJ     = "NULL"
 )
 
@@ -46,3 +47,10 @@ type Null struct{}
 
 func (i *Null) Type() ObjectType { return NULL_OBJ }
 func (i *Null) Inspect() string  { return "null" }
+
+type Error struct {
+	Message string
+}
+
+func (err *Error) Type() ObjectType { return ERROR_OBJ }
+func (err *Error) Inspect() string  { return fmt.Sprintf("error#%s", err.Message) }
