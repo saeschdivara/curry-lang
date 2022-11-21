@@ -55,6 +55,9 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	case *ast.LetStatement:
 		return engine.EvalLetStatement(node)
 
+	case *ast.ReturnStatement:
+		return engine.EvalReturnStatement(node)
+
 	case *ast.FunctionExpression:
 		return engine.EvalFunctionExpression(node)
 
@@ -81,6 +84,10 @@ func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) obj
 	engine.Variables = append(engine.Variables, variable)
 
 	return NULL
+}
+
+func (engine *ExecutionEngine) EvalReturnStatement(statement *ast.ReturnStatement) object.Object {
+	return engine.Eval(statement.ReturnValue)
 }
 
 func (engine *ExecutionEngine) EvalFunctionExpression(statement *ast.FunctionExpression) object.Object {

@@ -140,6 +140,21 @@ func TestEvalFunctionCall(t *testing.T) {
 	}
 }
 
+func TestEvalReturnStatement(t *testing.T) {
+	result := testEval("fn foo() { return 3; }; foo();")
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 3 {
+		t.Errorf("Variable should contain 3")
+	}
+}
+
 func TestEvalAnonymousFunctionCall(t *testing.T) {
 	result := testEval("fn() { 3; }();")
 
