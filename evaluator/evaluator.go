@@ -81,6 +81,12 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	case *ast.LetStatement:
 		return engine.EvalLetStatement(node)
 
+	case *ast.AssignmentStatement:
+		return engine.EvalAssignmentStatement(node)
+
+	case *ast.WhileStatement:
+		return engine.EvalWhileStatement(node)
+
 	case *ast.ReturnStatement:
 		return engine.EvalReturnStatement(node)
 
@@ -108,6 +114,48 @@ func (engine *ExecutionEngine) EvalLetStatement(statement *ast.LetStatement) obj
 	}
 
 	engine.Variables = append(engine.Variables, variable)
+
+	return NULL
+}
+
+func (engine *ExecutionEngine) EvalAssignmentStatement(statement *ast.AssignmentStatement) object.Object {
+
+	identifierName := statement.Name.Value
+
+	for i, variable := range engine.Variables {
+		if variable.Name == identifierName {
+			engine.Variables[i].Value = engine.Eval(statement.Value)
+			return NULL
+		}
+	}
+
+	return engine.createError(fmt.Sprintf("Tried to assign value to not existing variable %s", identifierName))
+}
+
+func (engine *ExecutionEngine) EvalWhileStatement(statement *ast.WhileStatement) object.Object {
+	conditionResult := engine.Eval(statement.Condition)
+	condition, ok := conditionResult.(*object.Boolean)
+
+	if !ok {
+		return engine.createError("Condition resulted with no boolean result")
+	}
+
+	for condition.Value {
+		engine.PushStack()
+		result := engine.EvalStatements(statement.Body)
+		engine.PopStack()
+
+		if result.Type() == object.ERROR_OBJ {
+			return result
+		}
+
+		conditionResult = engine.Eval(statement.Condition)
+		condition, ok = conditionResult.(*object.Boolean)
+
+		if !ok {
+			return engine.createError("Condition resulted with no boolean result")
+		}
+	}
 
 	return NULL
 }

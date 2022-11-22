@@ -243,6 +243,26 @@ func TestEvalIdentifierExpression(t *testing.T) {
 	}
 }
 
+func TestEvalWhileLoop(t *testing.T) {
+	l := lexer.New("let foo = 3; while(foo < 10) { foo = foo + 1; }; foo;")
+	p := parser.New(l)
+	program := p.ParseProgram()
+	engine := NewEngine()
+
+	result := engine.Eval(program)
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 10 {
+		t.Errorf("Variable should contain 10")
+	}
+}
+
 func TestEvalErrors(t *testing.T) {
 	tests := []struct {
 		input    string
