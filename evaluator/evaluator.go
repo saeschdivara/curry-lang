@@ -312,18 +312,40 @@ func (engine *ExecutionEngine) EvalInfixExpression(infix *ast.InfixExpression) o
 		return right
 	}
 
-	if left.Type() != right.Type() {
+	leftType := left.Type()
+	rightType := right.Type()
+
+	if leftType != right.Type() {
+
+		if leftType == object.STRING_OBJ && rightType == object.INTEGER_OBJ {
+			strVal := left.(*object.String)
+			intVal := right.(*object.Integer)
+
+			return &object.String{Value: fmt.Sprintf("%s%v", strVal.Value, intVal.Value)}
+		}
+
+		if leftType == object.INTEGER_OBJ && rightType == object.STRING_OBJ {
+			intVal := left.(*object.Integer)
+			strVal := right.(*object.String)
+
+			return &object.String{Value: fmt.Sprintf("%v%s", intVal.Value, strVal.Value)}
+		}
+
 		return engine.createError(
-			fmt.Sprintf("Left and right variable share not the same type(%s and %s)", left.Type(), right.Type()),
+			fmt.Sprintf("Left and right variable share not the same type(%s and %s)", leftType, rightType),
 		)
 	}
 
 	operator := infix.Operator
-	if left.Type() == object.INTEGER_OBJ {
+
+	if leftType == object.INTEGER_OBJ {
 		return engine.EvalIntegerInfixOperations(left.(*object.Integer), right.(*object.Integer), operator)
 	}
+	if leftType == object.STRING_OBJ {
+		return engine.EvalStringInfixOperations(left.(*object.String), right.(*object.String), operator)
+	}
 
-	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for type %s", operator, left.Type()))
+	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for type %s", operator, leftType))
 }
 
 func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, right *object.Integer, operator string) object.Object {
@@ -348,6 +370,26 @@ func (engine *ExecutionEngine) EvalIntegerInfixOperations(left *object.Integer, 
 		return &object.Integer{Value: left.Value * right.Value}
 	case token.SLASH:
 		return &object.Integer{Value: left.Value / right.Value}
+	}
+
+	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for integers", operator))
+}
+
+func (engine *ExecutionEngine) EvalStringInfixOperations(left *object.String, right *object.String, operator string) object.Object {
+
+	switch operator {
+	// logical operations
+	//case token.LT:
+	//	return &object.Boolean{Value: left.Value < right.Value}
+	//case token.GT:
+	//	return &object.Boolean{Value: left.Value > right.Value}
+	//case token.EQ:
+	//	return &object.Boolean{Value: left.Value == right.Value}
+	//case token.NOT_EQ:
+	//	return &object.Boolean{Value: left.Value != right.Value}
+
+	case token.PLUS:
+		return &object.String{Value: left.Value + right.Value}
 	}
 
 	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for integers", operator))

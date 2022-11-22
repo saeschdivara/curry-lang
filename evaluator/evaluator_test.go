@@ -84,6 +84,21 @@ func TestEvalIntegerInfixExpression(t *testing.T) {
 	}
 }
 
+func TestEvalStringInfixExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"\"foo\" + \"bar\"", "foobar"},
+		{"\"foo\" + 1", "foo1"},
+		{"1 + \"foo\"", "1foo"},
+	}
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+		testStringObject(t, evaluated, tt.expected)
+	}
+}
+
 func TestEvalBooleanPrefixExpression(t *testing.T) {
 	tests := []struct {
 		input    string
