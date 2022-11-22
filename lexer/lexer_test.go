@@ -24,6 +24,11 @@ func TestNextToken(t *testing.T) {
 
 	10 == 10;
 	10 != 9;
+	while (test > 4) {
+		if (false) {
+			break;
+		}
+	}
     `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -102,6 +107,22 @@ func TestNextToken(t *testing.T) {
 		{token.NOT_EQ, "!="},
 		{token.INT, "9"},
 		{token.SEMICOLON, ";"},
+		{token.WHILE, "while"},
+		{token.LPAREN, "("},
+		{token.IDENT, "test"},
+		{token.GT, ">"},
+		{token.INT, "4"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.IF, "if"},
+		{token.LPAREN, "("},
+		{token.FALSE, "false"},
+		{token.RPAREN, ")"},
+		{token.LBRACE, "{"},
+		{token.BREAK, "break"},
+		{token.SEMICOLON, ";"},
+		{token.RBRACE, "}"},
+		{token.RBRACE, "}"},
 		{token.EOF, ""},
 	}
 	l := New(input)
