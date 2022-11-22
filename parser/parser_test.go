@@ -71,6 +71,35 @@ func TestReturnStatements(t *testing.T) {
 	}
 }
 
+func TestWhileStatements(t *testing.T) {
+	input := `
+   while (foo) {
+		let x = 10;
+	}
+   `
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.WhileStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.WhileStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Condition.String() != "foo" {
+		t.Fatalf("Expected stmt.Condition.String() to be foo but was %s", stmt.Condition.String())
+	}
+
+	if len(stmt.Body) != 1 {
+		t.Fatalf("Expected len(stmt.Body) to be 1 but was %v", len(stmt.Body))
+	}
+}
+
 func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 	l := lexer.New(input)

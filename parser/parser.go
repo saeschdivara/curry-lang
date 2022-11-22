@@ -117,6 +117,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		statement = p.parseLetStatement()
 	case token.RETURN:
 		statement = p.parseReturnStatement()
+	case token.WHILE:
+		statement = p.parseWhileStatement()
 	default:
 		statement = p.parseExpressionStatement()
 	}
@@ -170,6 +172,36 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 	if p.peekTokenIs(token.SEMICOLON) {
 		p.nextToken()
 	}
+
+	return statement
+}
+
+func (p *Parser) parseWhileStatement() *ast.WhileStatement {
+	statement := &ast.WhileStatement{
+		Token: p.curToken,
+	}
+
+	p.nextToken()
+	statement.Condition = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.LBRACE) {
+		p.errors = append(p.errors, "Missing { after while condition")
+		return nil
+	}
+
+	p.nextToken()
+
+	for !p.peekTokenIs(token.RBRACE) && !p.peekTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+
+		if stmt == nil {
+			return nil
+		}
+
+		statement.Body = append(statement.Body, stmt)
+	}
+
+	p.nextToken()
 
 	return statement
 }
