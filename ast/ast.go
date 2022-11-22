@@ -42,6 +42,26 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
+type AssignmentStatement struct {
+	Name  *Identifier
+	Value Expression
+}
+
+func (ls *AssignmentStatement) statementNode()       {}
+func (ls *AssignmentStatement) TokenLiteral() string { return "<assignment>" }
+
+func (ls *AssignmentStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(ls.Name.String())
+	out.WriteString(" = ")
+	if ls.Value != nil {
+		out.WriteString(ls.Value.String())
+	}
+
+	out.WriteString(";")
+	return out.String()
+}
+
 type WhileStatement struct {
 	Token     token.Token // the token.WHILE token
 	Condition Expression

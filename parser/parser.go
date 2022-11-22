@@ -119,6 +119,12 @@ func (p *Parser) parseStatement() ast.Statement {
 		statement = p.parseReturnStatement()
 	case token.WHILE:
 		statement = p.parseWhileStatement()
+	case token.IDENT:
+		if p.peekTokenIs(token.ASSIGN) {
+			statement = p.parseAssignmentStatement()
+		} else {
+			statement = p.parseExpressionStatement()
+		}
 	default:
 		statement = p.parseExpressionStatement()
 	}
@@ -156,6 +162,31 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 		if !p.expectPeek(token.SEMICOLON) {
 			return nil
 		}
+	}
+
+	return statement
+}
+
+func (p *Parser) parseAssignmentStatement() *ast.AssignmentStatement {
+	statement := &ast.AssignmentStatement{}
+
+	name := &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	statement.Name = name
+
+	if p.peekTokenIs(token.ASSIGN) {
+		p.nextToken()
+		p.nextToken()
+		statement.Value = p.parseExpression(LOWEST)
+
+		_, isIfElse := statement.Value.(*ast.IfElseExpression)
+		_, isFunction := statement.Value.(*ast.FunctionExpression)
+
+		if !isIfElse && !isFunction && !p.expectPeek(token.SEMICOLON) {
+			return nil
+		}
+	} else {
+		p.errors = append(p.errors, "Assign operator missing")
+		return nil
 	}
 
 	return statement
