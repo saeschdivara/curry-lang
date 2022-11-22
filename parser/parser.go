@@ -62,6 +62,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.IF, p.parseIfElseExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
+	p.registerPrefix(token.QUOTE, p.parseStringExpression)
 
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
@@ -343,6 +344,22 @@ func (p *Parser) parseIntegerLiteral() ast.Expression {
 		return nil
 	}
 	lit.Value = value
+	return lit
+}
+
+func (p *Parser) parseStringExpression() ast.Expression {
+	lit := &ast.StringLiteral{Token: p.curToken}
+	p.nextToken()
+
+	val := ""
+
+	for p.curToken.Type != token.QUOTE {
+		val += p.curToken.Literal
+		p.nextToken()
+	}
+
+	lit.Value = val
+
 	return lit
 }
 

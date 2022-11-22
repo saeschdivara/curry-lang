@@ -125,6 +125,31 @@ func TestVariableAssignment(t *testing.T) {
 	}
 }
 
+func TestStringLiteral(t *testing.T) {
+	input := "x = \"f{}dfds)=\";"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.AssignmentStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.AssignmentStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Name.String() != "x" {
+		t.Fatalf("Expected stmt.Name.String() to be x but was %s", stmt.Name.String())
+	}
+
+	if stmt.Value.String() != "f{}dfds)=" {
+		t.Fatalf("Expected stmt.Value.String() to be \"f{}dfds)=\" but was %s", stmt.Value.String())
+	}
+}
+
 func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 	l := lexer.New(input)
