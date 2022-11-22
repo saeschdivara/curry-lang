@@ -391,7 +391,7 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 
 	p.nextToken()
 
-	for p.curToken.Type != token.RBRACE {
+	for p.curToken.Type != token.RBRACE && p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
 
 		if stmt == nil {
