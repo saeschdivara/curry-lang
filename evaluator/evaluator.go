@@ -68,6 +68,8 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 		return &object.Integer{Value: node.Value}
 	case *ast.Boolean:
 		return &object.Boolean{Value: node.Value}
+	case *ast.StringLiteral:
+		return &object.String{Value: node.Value}
 	case *ast.Identifier:
 		return engine.EvalIdentifier(node)
 
