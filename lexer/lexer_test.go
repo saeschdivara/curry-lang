@@ -141,6 +141,7 @@ func TestUnicodeToken(t *testing.T) {
 	input := `
     let fävê = 5;
     let 日本語 = fäßê;
+    let test = "fäßê";
     `
 	tests := []struct {
 		expectedType    token.TokenType
@@ -155,6 +156,13 @@ func TestUnicodeToken(t *testing.T) {
 		{token.IDENT, "日本語"},
 		{token.ASSIGN, "="},
 		{token.IDENT, "fäßê"},
+		{token.SEMICOLON, ";"},
+		{token.LET, "let"},
+		{token.IDENT, "test"},
+		{token.ASSIGN, "="},
+		{token.QUOTE, "\""},
+		{token.IDENT, "fäßê"},
+		{token.QUOTE, "\""},
 		{token.SEMICOLON, ";"},
 		{token.EOF, ""},
 	}
