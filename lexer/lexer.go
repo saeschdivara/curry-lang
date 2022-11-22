@@ -138,7 +138,3 @@ func (l *Lexer) peekChar() rune {
 		return l.input[l.readPosition]
 	}
 }
-
-func isLetter(ch rune) bool {
-	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
-}
