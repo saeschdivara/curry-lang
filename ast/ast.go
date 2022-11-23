@@ -186,6 +186,30 @@ func (str *StringLiteral) expressionNode()      {}
 func (str *StringLiteral) TokenLiteral() string { return str.Token.Literal }
 func (str *StringLiteral) String() string       { return str.Value }
 
+type ListExpression struct {
+	Token token.Token
+	Value []Expression
+}
+
+func (list *ListExpression) expressionNode()      {}
+func (list *ListExpression) TokenLiteral() string { return list.Token.Literal }
+func (list *ListExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("[")
+
+	for i, s := range list.Value {
+		out.WriteString(s.String())
+		if i < len(list.Value)-1 {
+			out.WriteString(", ")
+		}
+	}
+
+	out.WriteString("]")
+
+	return out.String()
+}
+
 type IfElseExpression struct {
 	Token       token.Token
 	Condition   Expression

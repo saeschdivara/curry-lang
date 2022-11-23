@@ -150,6 +150,81 @@ func TestStringLiteral(t *testing.T) {
 	}
 }
 
+func TestIntegerListExpression(t *testing.T) {
+	input := "x = [10, 50];"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.AssignmentStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.AssignmentStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Name.String() != "x" {
+		t.Fatalf("Expected stmt.Name.String() to be x but was %s", stmt.Name.String())
+	}
+
+	if stmt.Value.String() != "[10, 50]" {
+		t.Fatalf("Expected stmt.Value.String() to be [10, 50] but was %s", stmt.Value.String())
+	}
+}
+
+func TestStringListExpression(t *testing.T) {
+	input := "x = [\"foo\", \"bar\"];"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.AssignmentStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.AssignmentStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Name.String() != "x" {
+		t.Fatalf("Expected stmt.Name.String() to be x but was %s", stmt.Name.String())
+	}
+
+	if stmt.Value.String() != "[foo, bar]" {
+		t.Fatalf("Expected stmt.Value.String() to be [foo, bar] but was %s", stmt.Value.String())
+	}
+}
+
+func TestListListsExpression(t *testing.T) {
+	input := "x = [[\"foo\", \"bar\"], [1, 20, 6]];"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.AssignmentStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.AssignmentStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Name.String() != "x" {
+		t.Fatalf("Expected stmt.Name.String() to be x but was %s", stmt.Name.String())
+	}
+
+	if stmt.Value.String() != "[[foo, bar], [1, 20, 6]]" {
+		t.Fatalf("Expected stmt.Value.String() to be [foo, bar] but was %s", stmt.Value.String())
+	}
+}
+
 func TestIdentifierExpression(t *testing.T) {
 	input := "foobar;"
 	l := lexer.New(input)

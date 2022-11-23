@@ -63,6 +63,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.IF, p.parseIfElseExpression)
 	p.registerPrefix(token.FUNCTION, p.parseFunctionExpression)
 	p.registerPrefix(token.QUOTE, p.parseStringExpression)
+	p.registerPrefix(token.LBRACKET, p.parseListExpression)
 
 	p.registerPrefix(token.BANG, p.parsePrefixExpression)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
@@ -359,6 +360,32 @@ func (p *Parser) parseStringExpression() ast.Expression {
 	}
 
 	lit.Value = val
+
+	return lit
+}
+
+func (p *Parser) parseListExpression() ast.Expression {
+	lit := &ast.ListExpression{Token: p.curToken}
+	p.nextToken()
+
+	lit.Value = make([]ast.Expression, 0)
+
+	for p.curToken.Type != token.RBRACKET {
+		expr := p.parseExpression(LOWEST)
+
+		if expr != nil {
+			lit.Value = append(lit.Value, expr)
+		}
+
+		if !p.peekTokenIs(token.COMMA) {
+			break
+		}
+
+		p.nextToken()
+		p.nextToken()
+	}
+
+	p.nextToken()
 
 	return lit
 }
