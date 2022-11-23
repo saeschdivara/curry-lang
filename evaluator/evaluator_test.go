@@ -128,6 +128,29 @@ func TestEvalIntegerPrefixExpression(t *testing.T) {
 	}
 }
 
+func TestEvalListExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected []int64
+	}{
+		{"[10, 20]", []int64{10, 20}},
+	}
+	for _, tt := range tests {
+		result := testEval(tt.input)
+
+		listResult, ok := result.(*object.List)
+
+		if !ok {
+			t.Errorf("Result is not of type object.List but got %T", result)
+			return
+		}
+
+		for i, obj := range listResult.Value {
+			testIntegerObject(t, obj, tt.expected[i])
+		}
+	}
+}
+
 func TestEvalIfExpression(t *testing.T) {
 	tests := []struct {
 		input    string

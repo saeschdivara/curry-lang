@@ -12,6 +12,7 @@ const (
 	BOOLEAN_OBJ  = "BOOLEAN"
 	STRING_OBJ   = "STRING"
 	FUNCITON_OBJ = "FUNCTION"
+	LIST_OBJ     = "LIST"
 	ERROR_OBJ    = "ERROR"
 	NULL_OBJ     = "NULL"
 )
@@ -50,6 +51,14 @@ type Function struct {
 
 func (function *Function) Type() ObjectType { return FUNCITON_OBJ }
 func (function *Function) Inspect() string  { return fmt.Sprintf("fn %s", function.Name) }
+
+type List struct {
+	ValueType ObjectType
+	Value     []Object
+}
+
+func (list *List) Type() ObjectType { return LIST_OBJ }
+func (list *List) Inspect() string  { return "list<" + string(list.ValueType) + ">" }
 
 type Null struct{}
 

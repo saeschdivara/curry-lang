@@ -70,6 +70,8 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 		return &object.Boolean{Value: node.Value}
 	case *ast.StringLiteral:
 		return &object.String{Value: node.Value}
+	case *ast.ListExpression:
+		return engine.EvalListExpression(node)
 	case *ast.Identifier:
 		return engine.EvalIdentifier(node)
 
@@ -205,6 +207,33 @@ func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.Functio
 	engine.PopStack()
 
 	return result
+}
+
+func (engine *ExecutionEngine) EvalListExpression(identifier *ast.ListExpression) object.Object {
+	obj := &object.List{}
+	obj.Value = make([]object.Object, 0)
+
+	for i, valExpr := range identifier.Value {
+		val := engine.Eval(valExpr)
+		if i == 0 {
+			obj.ValueType = val.Type()
+		} else {
+			if val.Type() != obj.ValueType {
+				return engine.createError(
+					fmt.Sprintf(
+						"List members have to be all of the same type, value #%v has type %s instead of %s",
+						i,
+						val.Type(),
+						obj.Type(),
+					),
+				)
+			}
+		}
+
+		obj.Value = append(obj.Value, val)
+	}
+
+	return obj
 }
 
 func (engine *ExecutionEngine) EvalIdentifier(identifier *ast.Identifier) object.Object {
