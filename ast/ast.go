@@ -210,6 +210,25 @@ func (list *ListExpression) String() string {
 	return out.String()
 }
 
+type IndexAccessExpression struct {
+	Token  token.Token
+	Source Expression
+	Value  Expression
+}
+
+func (index *IndexAccessExpression) expressionNode()      {}
+func (index *IndexAccessExpression) TokenLiteral() string { return index.Token.Literal }
+func (index *IndexAccessExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(index.Source.String())
+	out.WriteString("[")
+	out.WriteString(index.Value.String())
+	out.WriteString("]")
+
+	return out.String()
+}
+
 type IfElseExpression struct {
 	Token       token.Token
 	Condition   Expression

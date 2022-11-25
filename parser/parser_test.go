@@ -200,6 +200,36 @@ func TestStringListExpression(t *testing.T) {
 	}
 }
 
+func TestStringListIndexExpression(t *testing.T) {
+	input := "[\"foo\", \"bar\"][1];"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.AssignmentStatement. got=%T", program.Statements[0])
+	}
+
+	expr, ok := stmt.Expression.(*ast.IndexAccessExpression)
+	if !ok {
+		t.Fatalf("stmt.Expression not *ast.IndexAccessExpression. got=%T", stmt.Expression)
+	}
+
+	if expr.Source.String() != "[foo, bar]" {
+		t.Fatalf("Expected expr.Source.String() to be [foo, bar] but was %s", expr.Source.String())
+	}
+
+	if expr.Value.String() != "1" {
+		t.Fatalf("Expected expr.Value.String() to be 1 but was %s", expr.Value.String())
+	}
+}
+
 func TestListListsExpression(t *testing.T) {
 	input := "x = [[\"foo\", \"bar\"], [1, 20, 6]];"
 	l := lexer.New(input)
