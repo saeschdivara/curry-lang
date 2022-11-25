@@ -81,6 +81,8 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 		return engine.EvalPrefixExpression(node)
 	case *ast.InfixExpression:
 		return engine.EvalInfixExpression(node)
+	case *ast.IndexAccessExpression:
+		return engine.EvalIndexAccessExpression(node)
 
 	case *ast.LetStatement:
 		return engine.EvalLetStatement(node)
@@ -422,6 +424,40 @@ func (engine *ExecutionEngine) EvalStringInfixOperations(left *object.String, ri
 	}
 
 	return engine.createError(fmt.Sprintf("Not supported infix operator (%s) was used for integers", operator))
+}
+
+func (engine *ExecutionEngine) EvalIndexAccessExpression(indexAccess *ast.IndexAccessExpression) object.Object {
+
+	indexExpr := engine.Eval(indexAccess.Value)
+
+	if indexExpr.Type() == object.ERROR_OBJ {
+		return indexExpr
+	}
+
+	if indexExpr.Type() != object.INTEGER_OBJ {
+		return engine.createError(fmt.Sprintf("Index type has to be integer but is %s", indexExpr.Type()))
+	}
+
+	sourceExpr := engine.Eval(indexAccess.Source)
+
+	if sourceExpr.Type() == object.ERROR_OBJ {
+		return sourceExpr
+	}
+
+	if sourceExpr.Type() != object.LIST_OBJ {
+		return engine.createError(fmt.Sprintf("Source type has to be list but is %s", sourceExpr.Type()))
+	}
+
+	indexObj := indexExpr.(*object.Integer)
+	sourceList := sourceExpr.(*object.List)
+
+	if int(indexObj.Value) >= len(sourceList.Value) {
+		return engine.createError(
+			fmt.Sprintf("List is too small (%v) for index %v", len(sourceList.Value), indexObj.Value),
+		)
+	}
+
+	return sourceList.Value[indexObj.Value]
 }
 
 func (engine *ExecutionEngine) createError(message string) *object.Error {

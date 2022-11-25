@@ -151,6 +151,27 @@ func TestEvalListExpression(t *testing.T) {
 	}
 }
 
+func TestEvalListIndexExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected int64
+	}{
+		{"[10, 20][1]", 20},
+	}
+	for _, tt := range tests {
+		result := testEval(tt.input)
+
+		intResult, ok := result.(*object.Integer)
+
+		if !ok {
+			t.Errorf("Result is not of type object.Integer but got %T", result)
+			return
+		}
+
+		testIntegerObject(t, intResult, tt.expected)
+	}
+}
+
 func TestEvalIfExpression(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -357,6 +378,12 @@ func testEval(input string) object.Object {
 }
 
 func testIntegerObject(t *testing.T, obj object.Object, expected int64) bool {
+
+	if obj.Type() == object.ERROR_OBJ {
+		t.Errorf("Received error index of integer: %s", obj.Inspect())
+		return false
+	}
+
 	result, ok := obj.(*object.Integer)
 	if !ok {
 		t.Errorf("object is not Integer. got=%T (%+v)", obj, obj)
