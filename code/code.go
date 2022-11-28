@@ -13,6 +13,9 @@ const (
 	// OpConstant retrieves constant from pool by index and pushes it onto the stack
 	OpConstant Opcode = iota
 	OpAdd
+	OpSub
+	OpMul
+	OpDiv
 	OpPop
 )
 
@@ -31,6 +34,9 @@ type Definition struct {
 var definitions = map[Opcode]*Definition{
 	OpConstant: {"OpConstant", []int{OpcodeU16}}, // index u16 => 65536 possible values
 	OpAdd:      {"OpAdd", []int{}},
+	OpSub:      {"OpSub", []int{}},
+	OpMul:      {"OpMul", []int{}},
+	OpDiv:      {"OpDiv", []int{}},
 	OpPop:      {"OpPop", []int{}},
 }
 

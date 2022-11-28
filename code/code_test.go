@@ -10,6 +10,9 @@ func TestMake(t *testing.T) {
 	}{
 		{OpConstant, []int{0xfffe}, []byte{byte(OpConstant), 0xff, 0xfe}},
 		{OpAdd, []int{}, []byte{byte(OpAdd)}},
+		{OpSub, []int{}, []byte{byte(OpSub)}},
+		{OpMul, []int{}, []byte{byte(OpMul)}},
+		{OpDiv, []int{}, []byte{byte(OpDiv)}},
 		{OpPop, []int{}, []byte{byte(OpPop)}},
 	}
 
