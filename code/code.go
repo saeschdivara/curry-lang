@@ -23,6 +23,9 @@ const (
 	OpEqual
 	OpNotEqual
 	OpGreaterThan
+
+	OpMinus
+	OpBang
 )
 
 const (
@@ -47,6 +50,8 @@ var definitions = map[Opcode]*Definition{
 	OpEqual:       {"OpEqual", []int{}},
 	OpNotEqual:    {"OpNotEqual", []int{}},
 	OpGreaterThan: {"OpGreaterThan", []int{}},
+	OpMinus:       {"OpMinus", []int{}},
+	OpBang:        {"OpBang", []int{}},
 	OpTrue:        {"OpTrue", []int{}},
 	OpFalse:       {"OpFalse", []int{}},
 }

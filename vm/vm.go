@@ -65,6 +65,36 @@ func (vm *VM) Run() error {
 				return err
 			}
 
+		case code.OpMinus:
+			right := vm.pop()
+			rightType := right.Type()
+
+			if rightType != object.INTEGER_OBJ {
+				return fmt.Errorf("%s does not support minus operator", rightType)
+			}
+
+			intVal := right.(*object.Integer)
+			intVal.Value *= -1
+
+			err := vm.push(intVal)
+			if err != nil {
+				return err
+			}
+
+		case code.OpBang:
+			right := vm.pop()
+			rightType := right.Type()
+
+			if rightType != object.BOOLEAN_OBJ {
+				return fmt.Errorf("%s does not support bang operator", rightType)
+			}
+
+			boolValue := right.(*object.Boolean)
+			err := vm.push(nativeBooleanToVmBoolean(!boolValue.Value))
+			if err != nil {
+				return err
+			}
+
 		case code.OpAdd, code.OpSub, code.OpMul, code.OpDiv:
 			err := vm.executeBinaryOperation(op)
 			if err != nil {
