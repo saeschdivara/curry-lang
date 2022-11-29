@@ -71,6 +71,12 @@ func (vm *VM) Run() error {
 				return err
 			}
 
+		case code.OpGreaterThan, code.OpEqual, code.OpNotEqual:
+			err := vm.executeComparison(op)
+			if err != nil {
+				return err
+			}
+
 		case code.OpPop:
 			vm.pop()
 		}
@@ -90,9 +96,7 @@ func (vm *VM) executeBinaryOperation(op code.Opcode) error {
 	return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
 }
 
-func (vm *VM) executeBinaryIntegerOperation(op code.Opcode,
-	left, right object.Object,
-) error {
+func (vm *VM) executeBinaryIntegerOperation(op code.Opcode, left, right object.Object) error {
 	leftValue := left.(*object.Integer).Value
 	rightValue := right.(*object.Integer).Value
 	var result int64
@@ -109,6 +113,67 @@ func (vm *VM) executeBinaryIntegerOperation(op code.Opcode,
 		return fmt.Errorf("unknown integer operator: %d", op)
 	}
 	return vm.push(&object.Integer{Value: result})
+}
+
+func (vm *VM) executeComparison(op code.Opcode) error {
+	right := vm.pop()
+	left := vm.pop()
+	leftType := left.Type()
+	rightType := right.Type()
+
+	if leftType == object.INTEGER_OBJ && rightType == object.INTEGER_OBJ {
+		return vm.executeComparisonInteger(op, left, right)
+	}
+
+	if leftType == object.BOOLEAN_OBJ && rightType == object.BOOLEAN_OBJ {
+		return vm.executeComparisonBoolean(op, left, right)
+	}
+
+	return fmt.Errorf("unsupported types for binary operation: %s %s", leftType, rightType)
+}
+
+func (vm *VM) executeComparisonInteger(op code.Opcode, left, right object.Object) error {
+	leftValue := left.(*object.Integer).Value
+	rightValue := right.(*object.Integer).Value
+	var result bool
+	switch op {
+	case code.OpGreaterThan:
+		result = leftValue > rightValue
+	case code.OpEqual:
+		result = leftValue == rightValue
+	case code.OpNotEqual:
+		result = leftValue != rightValue
+	default:
+		def, _ := code.Lookup(byte(op))
+		return fmt.Errorf("unknown integer operator: %s", def.Name)
+	}
+
+	return vm.push(nativeBooleanToVmBoolean(result))
+}
+
+func (vm *VM) executeComparisonBoolean(op code.Opcode, left, right object.Object) error {
+	leftValue := left.(*object.Boolean)
+	rightValue := right.(*object.Boolean)
+	var result bool
+	switch op {
+	case code.OpEqual:
+		result = leftValue == rightValue
+	case code.OpNotEqual:
+		result = leftValue != rightValue
+	default:
+		def, _ := code.Lookup(byte(op))
+		return fmt.Errorf("unknown integer operator: %s", def.Name)
+	}
+
+	return vm.push(nativeBooleanToVmBoolean(result))
+}
+
+func nativeBooleanToVmBoolean(val bool) *object.Boolean {
+	if val {
+		return True
+	} else {
+		return False
+	}
 }
 
 func (vm *VM) push(o object.Object) error {
