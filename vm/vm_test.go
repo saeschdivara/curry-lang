@@ -30,7 +30,15 @@ func TestIntegerArithmetic(t *testing.T) {
 		{"-50 + 100 + -50", 0},
 		{"(5 + 10 * 2 + 15 / 3) * 2 + -10", 50},
 	}
-	runVmTests(t, tests)
+	runVmTests(t, tests, false)
+}
+
+func TestIfElse(t *testing.T) {
+	tests := []vmTestCase{
+		{"if (true) {1;} else {2;}", 1},
+		{"if (false) {1;} else {2;}", 2},
+	}
+	runVmTests(t, tests, true)
 }
 
 func TestBooleanExpressions(t *testing.T) {
@@ -62,7 +70,7 @@ func TestBooleanExpressions(t *testing.T) {
 		{"!!false", false},
 	}
 
-	runVmTests(t, tests)
+	runVmTests(t, tests, false)
 }
 
 func parse(input string) *ast.Program {
@@ -76,7 +84,7 @@ type vmTestCase struct {
 	expected interface{}
 }
 
-func runVmTests(t *testing.T, tests []vmTestCase) {
+func runVmTests(t *testing.T, tests []vmTestCase, debugging bool) {
 	t.Helper()
 	for _, tt := range tests {
 		program := parse(tt.input)
@@ -86,6 +94,8 @@ func runVmTests(t *testing.T, tests []vmTestCase) {
 			t.Fatalf("compiler error: %s", err)
 		}
 		vm := New(comp.Bytecode())
+		vm.DebugMode = debugging
+
 		err = vm.Run()
 		if err != nil {
 			t.Fatalf("vm error: %s", err)

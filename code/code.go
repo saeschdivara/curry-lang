@@ -26,6 +26,9 @@ const (
 
 	OpMinus
 	OpBang
+
+	OpJump
+	OpJumpIfFalse
 )
 
 const (
@@ -54,6 +57,8 @@ var definitions = map[Opcode]*Definition{
 	OpBang:        {"OpBang", []int{}},
 	OpTrue:        {"OpTrue", []int{}},
 	OpFalse:       {"OpFalse", []int{}},
+	OpJump:        {"OpJump", []int{OpcodeU16}},
+	OpJumpIfFalse: {"OpJumpIfFalse", []int{OpcodeU16}},
 }
 
 func Lookup(op byte) (*Definition, error) {

@@ -14,6 +14,7 @@ type VM struct {
 	instructions code.Instructions
 	stack        []object.Object
 	sp           int // Always points to the next value. Top of stack is stack[sp-1]
+	DebugMode    bool
 }
 
 var True = &object.Boolean{Value: true}
@@ -25,6 +26,7 @@ func New(bytecode *compiler.Bytecode) *VM {
 		constants:    bytecode.Constants,
 		stack:        make([]object.Object, StackSize),
 		sp:           0,
+		DebugMode:    false,
 	}
 }
 
@@ -41,8 +43,18 @@ func (vm *VM) LastPoppedStackElem() object.Object {
 }
 
 func (vm *VM) Run() error {
+	if vm.DebugMode {
+		vm.DumpByteCode()
+	}
+
 	for ip := 0; ip < len(vm.instructions); ip++ {
 		op := code.Opcode(vm.instructions[ip])
+
+		if vm.DebugMode {
+			opDef, _ := code.Lookup(byte(op))
+			fmt.Println(ip, " > ", opDef.Name)
+		}
+
 		switch op {
 
 		case code.OpConstant:
@@ -109,7 +121,40 @@ func (vm *VM) Run() error {
 
 		case code.OpPop:
 			vm.pop()
+
+		case code.OpJumpIfFalse:
+			jumpVal := code.ReadUint16(vm.instructions[ip+1:])
+			conditionVal := vm.pop()
+
+			if conditionVal.Type() != object.BOOLEAN_OBJ {
+				return fmt.Errorf("unsupported type for boolean jump: %s", conditionVal.Type())
+			}
+
+			boolVal, _ := conditionVal.(*object.Boolean)
+
+			if boolVal == False {
+				ip += int(jumpVal) - 1
+			} else {
+				ip += 2
+			}
+
+		case code.OpJump:
+			jumpVal := code.ReadUint16(vm.instructions[ip+1:])
+			ip += int(jumpVal)
+
+		default:
+			def, err := code.Lookup(byte(op))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("no implementation for %s", def.Name)
 		}
+	}
+
+	if vm.DebugMode {
+		fmt.Println()
+		fmt.Println()
 	}
 
 	return nil
@@ -221,4 +266,8 @@ func (vm *VM) pop() object.Object {
 	o := vm.stack[vm.sp-1]
 	vm.sp--
 	return o
+}
+
+func (vm *VM) DumpByteCode() {
+	fmt.Println(vm.instructions)
 }
