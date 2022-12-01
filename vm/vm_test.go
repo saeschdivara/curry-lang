@@ -37,6 +37,12 @@ func TestIfElse(t *testing.T) {
 	tests := []vmTestCase{
 		{"if (true) {1;} else {2;}", 1},
 		{"if (false) {1;} else {2;}", 2},
+		{"if (true) { 10 }", 10},
+		{"if (true) { 10 } else { 20 }", 10},
+		{"if (false) { 10 } else { 20 } ", 20},
+		{"if (1 < 2) { 10 }", 10},
+		{"if (1 < 2) { 10 } else { 20 }", 10},
+		{"if (1 > 2) { 10 } else { 20 }", 20},
 	}
 	runVmTests(t, tests, true)
 }

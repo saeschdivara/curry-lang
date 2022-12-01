@@ -158,15 +158,19 @@ func (c *Compiler) compileIfExpression(ifExpr *ast.IfElseExpression) error {
 		return err
 	}
 
-	endJumpPos := c.emit(code.OpJump, 0)
-	c.updateInstruction(conditionJumpPos, code.OpJumpIfFalse, c.currentInstr.Pos+3-conditionJumpPos)
+	if len(ifExpr.Alternative) > 0 {
+		endJumpPos := c.emit(code.OpJump, 0)
+		c.updateInstruction(conditionJumpPos, code.OpJumpIfFalse, c.currentInstr.Pos+3-conditionJumpPos)
 
-	err = c.CompileStatements(ifExpr.Alternative)
-	if err != nil {
-		return err
+		err = c.CompileStatements(ifExpr.Alternative)
+		if err != nil {
+			return err
+		}
+
+		c.updateInstruction(endJumpPos, code.OpJump, c.currentInstr.Pos-endJumpPos)
+	} else {
+		c.updateInstruction(conditionJumpPos, code.OpJumpIfFalse, c.currentInstr.Pos-1-conditionJumpPos)
 	}
-
-	c.updateInstruction(endJumpPos, code.OpJump, c.currentInstr.Pos-endJumpPos)
 
 	return nil
 }
