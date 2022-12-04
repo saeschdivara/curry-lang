@@ -118,6 +118,8 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		statement = p.parseLetStatement()
+	case token.PACKAGE:
+		statement = p.parsePackageStatement()
 	case token.RETURN:
 		statement = p.parseReturnStatement()
 	case token.WHILE:
@@ -166,6 +168,17 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 			return nil
 		}
 	}
+
+	return statement
+}
+
+func (p *Parser) parsePackageStatement() *ast.PackageStatement {
+	statement := &ast.PackageStatement{
+		Token: p.curToken,
+	}
+
+	p.nextToken()
+	statement.Identifier = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
 
 	return statement
 }

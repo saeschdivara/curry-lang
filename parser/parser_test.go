@@ -100,6 +100,27 @@ func TestWhileStatements(t *testing.T) {
 	}
 }
 
+func TestPackageStatements(t *testing.T) {
+	input := "package main"
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 1 {
+		t.Fatalf("program.Statements does not contain 1 statements. got=%d", len(program.Statements))
+	}
+
+	stmt, ok := program.Statements[0].(*ast.PackageStatement)
+	if !ok {
+		t.Fatalf("program.Statements[0] not *ast.PackageStatement. got=%T", program.Statements[0])
+	}
+
+	if stmt.Identifier.String() != "main" {
+		t.Fatalf("Expected stmt.Identifier.String() to be main but was %s", stmt.Identifier.String())
+	}
+}
+
 func TestVariableAssignment(t *testing.T) {
 	input := "x = 10;"
 	l := lexer.New(input)

@@ -79,6 +79,22 @@ func (ls *WhileStatement) String() string {
 	return out.String()
 }
 
+type PackageStatement struct {
+	Token      token.Token // the token.PACKAGE token
+	Identifier *Identifier
+}
+
+func (ls *PackageStatement) statementNode()       {}
+func (ls *PackageStatement) TokenLiteral() string { return ls.Token.Literal }
+
+func (ls *PackageStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(ls.TokenLiteral() + " ")
+	out.WriteString(ls.Identifier.String())
+	out.WriteString(";")
+	return out.String()
+}
+
 type ReturnStatement struct {
 	Token       token.Token
 	ReturnValue Expression

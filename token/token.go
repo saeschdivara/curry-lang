@@ -42,6 +42,8 @@ const (
 	QUOTE = "\""
 
 	// Keywords
+	PACKAGE  = "PACKAGE"
+	IMPORT   = "IMPORT"
 	FUNCTION = "FUNCTION"
 	LET      = "LET"
 	TRUE     = "TRUE"
@@ -54,15 +56,17 @@ const (
 )
 
 var keywords = map[string]TokenType{
-	"fn":     FUNCTION,
-	"let":    LET,
-	"true":   TRUE,
-	"false":  FALSE,
-	"if":     IF,
-	"else":   ELSE,
-	"return": RETURN,
-	"while":  WHILE,
-	"break":  BREAK,
+	"package": PACKAGE,
+	"import":  IMPORT,
+	"fn":      FUNCTION,
+	"let":     LET,
+	"true":    TRUE,
+	"false":   FALSE,
+	"if":      IF,
+	"else":    ELSE,
+	"return":  RETURN,
+	"while":   WHILE,
+	"break":   BREAK,
 }
 
 func LookupIdent(ident string) TokenType {
