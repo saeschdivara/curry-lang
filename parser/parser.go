@@ -94,9 +94,7 @@ func (p *Parser) ParseProgram() *ast.Program {
 
 	for p.curToken.Type != token.EOF {
 		statement := p.parseStatement()
-		if statement != nil {
-			program.Statements = append(program.Statements, statement)
-		}
+		program.Statements = append(program.Statements, statement)
 
 		p.nextToken()
 	}
@@ -229,11 +227,6 @@ func (p *Parser) parseWhileStatement() *ast.WhileStatement {
 
 	for !p.peekTokenIs(token.RBRACE) && !p.peekTokenIs(token.EOF) {
 		stmt := p.parseStatement()
-
-		if stmt == nil {
-			return nil
-		}
-
 		statement.Body = append(statement.Body, stmt)
 	}
 
@@ -435,9 +428,7 @@ func (p *Parser) parseIfElseExpression() ast.Expression {
 
 	for p.curToken.Type != token.EOF && p.curToken.Type != token.RBRACE {
 		statement := p.parseStatement()
-		if statement != nil {
-			lit.Consequence = append(lit.Consequence, statement)
-		}
+		lit.Consequence = append(lit.Consequence, statement)
 
 		p.nextToken()
 	}
@@ -460,9 +451,7 @@ func (p *Parser) parseIfElseExpression() ast.Expression {
 
 		for p.curToken.Type != token.EOF && p.curToken.Type != token.RBRACE {
 			statement := p.parseStatement()
-			if statement != nil {
-				lit.Alternative = append(lit.Alternative, statement)
-			}
+			lit.Alternative = append(lit.Alternative, statement)
 
 			p.nextToken()
 		}
@@ -520,11 +509,6 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 
 	for p.curToken.Type != token.RBRACE && p.curToken.Type != token.EOF {
 		stmt := p.parseStatement()
-
-		if stmt == nil {
-			return nil
-		}
-
 		lit.Body = append(lit.Body, stmt)
 
 		p.nextToken()
