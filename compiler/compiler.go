@@ -16,7 +16,7 @@ type EmittedInstruction struct {
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
-	globalVars   map[string]int
+	symbols      *SymbolTable
 
 	previousInstr *EmittedInstruction
 	currentInstr  *EmittedInstruction
@@ -31,7 +31,7 @@ func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
-		globalVars:   make(map[string]int),
+		symbols:      NewSymbolTable(),
 	}
 }
 
@@ -56,15 +56,14 @@ func (c *Compiler) Compile(node ast.Node) error {
 
 	case *ast.LetStatement:
 		variableName := node.Name.Value
-		variableIndex := len(c.globalVars)
-		c.globalVars[variableName] = variableIndex
+		symbol := c.symbols.Define(variableName)
 
 		err := c.Compile(node.Value)
 		if err != nil {
 			return err
 		}
 
-		c.emit(code.OpSetGlobal, variableIndex)
+		c.emit(code.OpSetGlobal, symbol.Index)
 
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)
@@ -150,8 +149,8 @@ func (c *Compiler) Compile(node ast.Node) error {
 		}
 
 	case *ast.Identifier:
-		if val, ok := c.globalVars[node.Value]; ok {
-			c.emit(code.OpGetGlobal, val)
+		if val, ok := c.symbols.Resolve(node.Value); ok {
+			c.emit(code.OpGetGlobal, val.Index)
 		} else {
 			return fmt.Errorf("there variable %s has not yet been defined", node.Value)
 		}
