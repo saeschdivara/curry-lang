@@ -16,6 +16,7 @@ type EmittedInstruction struct {
 type Compiler struct {
 	instructions code.Instructions
 	constants    []object.Object
+	globalVars   map[string]int
 
 	previousInstr *EmittedInstruction
 	currentInstr  *EmittedInstruction
@@ -30,6 +31,7 @@ func New() *Compiler {
 	return &Compiler{
 		instructions: code.Instructions{},
 		constants:    []object.Object{},
+		globalVars:   make(map[string]int),
 	}
 }
 
@@ -51,6 +53,18 @@ func (c *Compiler) Compile(node ast.Node) error {
 		if err != nil {
 			return err
 		}
+
+	case *ast.LetStatement:
+		variableName := node.Name.Value
+		variableIndex := len(c.globalVars)
+		c.globalVars[variableName] = variableIndex
+
+		err := c.Compile(node.Value)
+		if err != nil {
+			return err
+		}
+
+		c.emit(code.OpSetGlobal, variableIndex)
 
 	case *ast.ExpressionStatement:
 		err := c.Compile(node.Expression)
@@ -133,6 +147,13 @@ func (c *Compiler) Compile(node ast.Node) error {
 			c.emit(code.OpTrue)
 		} else {
 			c.emit(code.OpFalse)
+		}
+
+	case *ast.Identifier:
+		if val, ok := c.globalVars[node.Value]; ok {
+			c.emit(code.OpGetGlobal, val)
+		} else {
+			return fmt.Errorf("there variable %s has not yet been defined", node.Value)
 		}
 
 	case *ast.IfElseExpression:
