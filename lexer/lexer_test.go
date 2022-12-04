@@ -7,6 +7,7 @@ import (
 
 func TestNextToken(t *testing.T) {
 	input := `
+    // Test Comment
     let five = 5;
 	let ten = 10;
 	   let add = fn(x, y) {
