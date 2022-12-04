@@ -8,11 +8,13 @@ import (
 )
 
 const StackSize = 2048
+const GlobalsSize = 65536
 
 type VM struct {
 	constants    []object.Object
 	instructions code.Instructions
 	stack        []object.Object
+	globals      []object.Object
 	sp           int // Always points to the next value. Top of stack is stack[sp-1]
 	DebugMode    bool
 }
@@ -25,6 +27,7 @@ func New(bytecode *compiler.Bytecode) *VM {
 		instructions: bytecode.Instructions,
 		constants:    bytecode.Constants,
 		stack:        make([]object.Object, StackSize),
+		globals:      make([]object.Object, GlobalsSize),
 		sp:           0,
 		DebugMode:    false,
 	}
@@ -141,6 +144,21 @@ func (vm *VM) Run() error {
 		case code.OpJump:
 			jumpVal := code.ReadUint16(vm.instructions[ip+1:])
 			ip += int(jumpVal)
+
+		case code.OpSetGlobal:
+			variableIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			vm.globals[variableIndex] = vm.pop()
+
+		case code.OpGetGlobal:
+			variableIndex := code.ReadUint16(vm.instructions[ip+1:])
+			ip += 2
+
+			err := vm.push(vm.globals[variableIndex])
+			if err != nil {
+				return err
+			}
 
 		default:
 			def, err := code.Lookup(byte(op))

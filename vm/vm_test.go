@@ -44,7 +44,7 @@ func TestIfElse(t *testing.T) {
 		{"if (1 < 2) { 10 } else { 20 }", 10},
 		{"if (1 > 2) { 10 } else { 20 }", 20},
 	}
-	runVmTests(t, tests, true)
+	runVmTests(t, tests, false)
 }
 
 func TestBooleanExpressions(t *testing.T) {
@@ -77,6 +77,16 @@ func TestBooleanExpressions(t *testing.T) {
 	}
 
 	runVmTests(t, tests, false)
+}
+
+func TestGlobalLetStatements(t *testing.T) {
+	tests := []vmTestCase{
+		{"let one = 1; one", 1},
+		{"let one = 1; let two = 2; one + two", 3},
+		{"let one = 1; let two = one + one; one + two", 3},
+	}
+
+	runVmTests(t, tests, true)
 }
 
 func parse(input string) *ast.Program {
