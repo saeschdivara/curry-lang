@@ -146,6 +146,48 @@ func TestVariableAssignment(t *testing.T) {
 	}
 }
 
+func TestImportStatement(t *testing.T) {
+	input := `
+		import "foo";
+		import (
+			"foo"
+			"bar"
+		);
+`
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	if len(program.Statements) != 2 {
+		t.Fatalf("program has not enough statements. got=%d", len(program.Statements))
+	}
+
+	tests := []struct {
+		expectedPackages []string
+	}{
+		{[]string{"foo"}},
+		{[]string{"foo", "bar"}},
+	}
+
+	for i, tt := range tests {
+		stmt, ok := program.Statements[i].(*ast.ImportStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ImportStatement. got=%T", program.Statements[0])
+		}
+
+		if len(stmt.Packages) != len(tt.expectedPackages) {
+			t.Fatalf("len(stmt.Packages) is not %d. got=%d", len(tt.expectedPackages), len(stmt.Packages))
+		}
+
+		for j, pkg := range tt.expectedPackages {
+			if stmt.Packages[j] != pkg {
+				t.Fatalf("stmt.Packages[%d] != \"%s\". got=%s", j, pkg, stmt.Packages[j])
+			}
+		}
+	}
+}
+
 func TestStringLiteral(t *testing.T) {
 	input := "x = \"f{}dfds)=\";"
 	l := lexer.New(input)

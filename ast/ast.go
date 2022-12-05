@@ -95,6 +95,25 @@ func (ls *PackageStatement) String() string {
 	return out.String()
 }
 
+type ImportStatement struct {
+	Token    token.Token // the token.IMPORT token
+	Packages []string
+}
+
+func (ls *ImportStatement) statementNode()       {}
+func (ls *ImportStatement) TokenLiteral() string { return ls.Token.Literal }
+
+func (ls *ImportStatement) String() string {
+	var out bytes.Buffer
+	out.WriteString(ls.TokenLiteral() + " (\n")
+	for _, pkg := range ls.Packages {
+		out.WriteString(pkg)
+		out.WriteString("\n")
+	}
+	out.WriteString(");")
+	return out.String()
+}
+
 type ReturnStatement struct {
 	Token       token.Token
 	ReturnValue Expression

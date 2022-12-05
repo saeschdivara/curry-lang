@@ -120,6 +120,8 @@ func (p *Parser) parseStatement() ast.Statement {
 		statement = p.parseLetStatement()
 	case token.PACKAGE:
 		statement = p.parsePackageStatement()
+	case token.IMPORT:
+		statement = p.parseImportStatement()
 	case token.RETURN:
 		statement = p.parseReturnStatement()
 	case token.WHILE:
@@ -179,6 +181,43 @@ func (p *Parser) parsePackageStatement() *ast.PackageStatement {
 
 	p.nextToken()
 	statement.Identifier = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+
+	return statement
+}
+
+func (p *Parser) parseImportStatement() *ast.ImportStatement {
+	statement := &ast.ImportStatement{
+		Token: p.curToken,
+	}
+
+	p.nextToken()
+
+	if p.curToken.Type == token.LPAREN {
+		p.nextToken()
+
+		for p.curToken.Type != token.RPAREN {
+			if p.curToken.Type != token.QUOTE {
+				p.errors = append(p.errors, "Missing quote before import package")
+				return nil
+			}
+
+			p.nextToken()
+			statement.Packages = append(statement.Packages, p.parseQuotedText())
+			p.nextToken()
+		}
+
+		p.nextToken()
+	} else {
+
+		if p.curToken.Type != token.QUOTE {
+			p.errors = append(p.errors, "Missing quote before import package")
+			return nil
+		}
+
+		p.nextToken()
+		statement.Packages = append(statement.Packages, p.parseQuotedText())
+		p.nextToken()
+	}
 
 	return statement
 }
@@ -378,14 +417,7 @@ func (p *Parser) parseStringExpression() ast.Expression {
 	lit := &ast.StringLiteral{Token: p.curToken}
 	p.nextToken()
 
-	val := ""
-
-	for p.curToken.Type != token.QUOTE {
-		val += p.curToken.Literal
-		p.nextToken()
-	}
-
-	lit.Value = val
+	lit.Value = p.parseQuotedText()
 
 	return lit
 }
@@ -532,6 +564,17 @@ func (p *Parser) parseFunctionExpression() ast.Expression {
 	}
 
 	return lit
+}
+
+func (p *Parser) parseQuotedText() string {
+	val := ""
+
+	for p.curToken.Type != token.QUOTE {
+		val += p.curToken.Literal
+		p.nextToken()
+	}
+
+	return val
 }
 
 func (p *Parser) expectPeek(t token.TokenType) bool {
