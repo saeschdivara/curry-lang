@@ -16,15 +16,34 @@ type Variable struct {
 	Value object.Object
 }
 
+type Package struct {
+	Name      string
+	Globals   []Variable
+	Functions map[string]*object.Function
+}
+
+type Module struct {
+	Name     string
+	Packages map[string]*Package
+}
+
 type ExecutionEngine struct {
 	Variables       []Variable
 	CurrentStackPos []uint32
 
 	Functions map[string]*object.Function
+	Modules   map[string]*Module
 
 	// engine state flags
 	IsReturnTriggered bool
 	HasError          bool
+}
+
+func NewModule(name string) *Module {
+	return &Module{
+		Name:     name,
+		Packages: make(map[string]*Package),
+	}
 }
 
 func NewEngine() *ExecutionEngine {
@@ -32,6 +51,7 @@ func NewEngine() *ExecutionEngine {
 	engine.Variables = make([]Variable, 0)
 	engine.CurrentStackPos = make([]uint32, 0)
 	engine.Functions = make(map[string]*object.Function)
+	engine.Modules = make(map[string]*Module)
 	return &engine
 }
 
