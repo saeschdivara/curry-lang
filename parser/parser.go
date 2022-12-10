@@ -17,25 +17,27 @@ const (
 	_ int = iota
 	LOWEST
 	EQUALS      // ==
-	LESSGREATER // > or <
+	LessGreater // > or <
 	SUM         // +
 	PRODUCT     // *
 	PREFIX      // -X or !X
+	DotAccess   // foo.myFunction
 	CALL        // myFunction(X)
-	LIST_INDEX  // x[y]
+	ListIndex   // x[y]
 )
 
 var precedences = map[token.TokenType]int{
 	token.EQ:       EQUALS,
 	token.NOT_EQ:   EQUALS,
-	token.LT:       LESSGREATER,
-	token.GT:       LESSGREATER,
+	token.LT:       LessGreater,
+	token.GT:       LessGreater,
 	token.PLUS:     SUM,
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.DOT:      DotAccess,
 	token.LPAREN:   CALL,
-	token.LBRACKET: LIST_INDEX,
+	token.LBRACKET: ListIndex,
 }
 
 type Parser struct {
@@ -81,6 +83,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GT, p.parseInfixExpression)
 	p.registerInfix(token.LPAREN, p.parseFunctionCall)
 	p.registerInfix(token.LBRACKET, p.parseIndexAccess)
+	p.registerInfix(token.DOT, p.parseDotAccess)
 
 	// Read two tokens, so curToken and peekToken are both set
 	p.nextToken()
@@ -347,6 +350,18 @@ func (p *Parser) parseIndexAccess(left ast.Expression) ast.Expression {
 		return nil
 	}
 
+	return expression
+}
+
+func (p *Parser) parseDotAccess(left ast.Expression) ast.Expression {
+	expression := &ast.DotAccessExpression{
+		Token:  p.curToken,
+		Source: left,
+	}
+
+	p.nextToken()
+
+	expression.Value = p.parseExpression(DotAccess)
 	return expression
 }
 

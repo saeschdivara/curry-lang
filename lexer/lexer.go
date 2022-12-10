@@ -28,7 +28,7 @@ func (l *Lexer) NextToken() token.Token {
 		for l.ch != '\n' && l.ch != '\r' {
 			l.readChar()
 		}
-		
+
 		l.skipWhitespace()
 	}
 
@@ -66,6 +66,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.LBRACKET, l.ch)
 	case ']':
 		tok = l.newToken(token.RBRACKET, l.ch)
+	case '.':
+		tok = l.newToken(token.DOT, l.ch)
 	case '<':
 		tok = l.newToken(token.LT, l.ch)
 	case '>':

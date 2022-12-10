@@ -734,6 +734,50 @@ func TestFunctionCallExpressions(t *testing.T) {
 	}
 }
 
+func TestDotAccessExpressions(t *testing.T) {
+	infixTests := []struct {
+		input   string
+		objName string
+		value   string
+	}{
+		{"foo.bar", "foo", "bar"},
+		{"foo.add(x, y);", "foo", "add(x, y)"},
+		{"foo.add(x+1, y*2);", "foo", "add((x + 1), (y * 2))"},
+	}
+	for _, tt := range infixTests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		if len(program.Statements) != 1 {
+			t.Fatalf("program.Statements does not contain %d statements. got=%d\n", 1, len(program.Statements))
+		}
+
+		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
+		if !ok {
+			t.Fatalf("program.Statements[0] is not ast.ExpressionStatement. got=%T", program.Statements[0])
+			return
+		}
+
+		expr, ok := stmt.Expression.(*ast.DotAccessExpression)
+		if !ok {
+			t.Fatalf("Expression is not ast.DotAccessExpression. got=%T", stmt.Expression)
+			return
+		}
+
+		if expr.Source.String() != tt.objName {
+			t.Errorf("expr.Source.String() not '%s'. got='%s'", tt.objName, expr.Source.String())
+			return
+		}
+
+		if expr.Value.String() != tt.value {
+			t.Errorf("expr.Value.String() not '%s'. got='%s'", tt.value, expr.Value.String())
+			return
+		}
+	}
+}
+
 func TestParsingComplexStatements(t *testing.T) {
 	input := `
 	if (test == 5) {

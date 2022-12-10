@@ -264,6 +264,24 @@ func (index *IndexAccessExpression) String() string {
 	return out.String()
 }
 
+type DotAccessExpression struct {
+	Token  token.Token
+	Source Expression
+	Value  Expression
+}
+
+func (access *DotAccessExpression) expressionNode()      {}
+func (access *DotAccessExpression) TokenLiteral() string { return access.Token.Literal }
+func (access *DotAccessExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString(access.Source.String())
+	out.WriteString(".")
+	out.WriteString(access.Value.String())
+
+	return out.String()
+}
+
 type IfElseExpression struct {
 	Token       token.Token
 	Condition   Expression
@@ -341,7 +359,9 @@ type FunctionCallExpression struct {
 
 func (il *FunctionCallExpression) expressionNode()      {}
 func (il *FunctionCallExpression) TokenLiteral() string { return il.Token.Literal }
-func (il *FunctionCallExpression) String() string       { return il.Token.Literal }
+func (il *FunctionCallExpression) String() string {
+	return il.FunctionExpr.String() + il.ParametersString()
+}
 
 func (il *FunctionCallExpression) ParametersString() string {
 	var out bytes.Buffer
