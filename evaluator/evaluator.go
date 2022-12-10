@@ -39,6 +39,14 @@ type ExecutionEngine struct {
 	HasError          bool
 }
 
+func NewPackage(name string) *Package {
+	return &Package{
+		Name:      name,
+		Globals:   make([]Variable, 0),
+		Functions: map[string]*object.Function{},
+	}
+}
+
 func NewModule(name string) *Module {
 	return &Module{
 		Name:     name,

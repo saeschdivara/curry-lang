@@ -1,6 +1,7 @@
 package evaluator
 
 import (
+	"curryLang/ast"
 	"curryLang/lexer"
 	"curryLang/object"
 	"curryLang/parser"
@@ -336,6 +337,48 @@ func TestEvalWhileLoop(t *testing.T) {
 	}
 }
 
+func TestEvalModulePackageFunction(t *testing.T) {
+	functionCode := parseStatements(`
+	return 1;
+`)
+
+	module := NewModule("foo")
+
+	pkg := NewPackage("")
+	pkg.Functions["bar"] = &object.Function{
+		Name:       "bar",
+		Parameters: []ast.Parameter{},
+		Code:       functionCode,
+	}
+
+	module.Packages[""] = pkg
+
+	l := lexer.New(`
+	import "foo";
+
+	foo.bar();
+`)
+	p := parser.New(l)
+	program := p.ParseProgram()
+
+	engine := NewEngine()
+
+	engine.Modules["foo"] = module
+
+	result := engine.Eval(program)
+
+	intResult, ok := result.(*object.Integer)
+
+	if !ok {
+		t.Errorf("Result is not of type object.Integer but got %T", result)
+		return
+	}
+
+	if intResult.Value != 1 {
+		t.Errorf("Variable should contain 1")
+	}
+}
+
 func TestEvalErrors(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -435,4 +478,12 @@ func testObject(t *testing.T, obj object.Object, expected object.Object) bool {
 	}
 
 	return false
+}
+
+func parseStatements(code string) []ast.Statement {
+	l := lexer.New(code)
+	p := parser.New(l)
+	program := p.ParseProgram()
+
+	return program.Statements
 }
