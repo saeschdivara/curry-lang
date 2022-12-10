@@ -344,14 +344,14 @@ func TestEvalModulePackageFunction(t *testing.T) {
 
 	module := NewModule("foo")
 
-	pkg := NewPackage("")
+	pkg := NewPackage("foo")
 	pkg.Functions["bar"] = &object.Function{
 		Name:       "bar",
 		Parameters: []ast.Parameter{},
 		Code:       functionCode,
 	}
 
-	module.Packages[""] = pkg
+	module.Packages["foo"] = pkg
 
 	l := lexer.New(`
 	import "foo";
@@ -360,6 +360,11 @@ func TestEvalModulePackageFunction(t *testing.T) {
 `)
 	p := parser.New(l)
 	program := p.ParseProgram()
+
+	if len(p.Errors()) > 0 {
+		t.Errorf("Received errors during parsing")
+		return
+	}
 
 	engine := NewEngine()
 
@@ -376,6 +381,7 @@ func TestEvalModulePackageFunction(t *testing.T) {
 
 	if intResult.Value != 1 {
 		t.Errorf("Variable should contain 1")
+		return
 	}
 }
 

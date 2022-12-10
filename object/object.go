@@ -13,6 +13,7 @@ const (
 	STRING_OBJ   = "STRING"
 	FUNCITON_OBJ = "FUNCTION"
 	LIST_OBJ     = "LIST"
+	PACKAGE_OBJ  = "PACKAGE"
 	ERROR_OBJ    = "ERROR"
 	NULL_OBJ     = "NULL"
 )
@@ -59,6 +60,16 @@ type List struct {
 
 func (list *List) Type() ObjectType { return LIST_OBJ }
 func (list *List) Inspect() string  { return "list<" + string(list.ValueType) + ">" }
+
+type Package struct {
+	ValueType ObjectType
+	Name      string
+	Globals   map[string]Object
+	Functions map[string]*Function
+}
+
+func (pkg *Package) Type() ObjectType { return PACKAGE_OBJ }
+func (pkg *Package) Inspect() string  { return "Package " + pkg.Name }
 
 type Null struct{}
 

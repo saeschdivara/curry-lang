@@ -5,6 +5,7 @@ import (
 	"curryLang/object"
 	"curryLang/token"
 	"fmt"
+	"strings"
 )
 
 var (
@@ -18,7 +19,7 @@ type Variable struct {
 
 type Package struct {
 	Name      string
-	Globals   []Variable
+	Globals   map[string]Variable
 	Functions map[string]*object.Function
 }
 
@@ -42,7 +43,7 @@ type ExecutionEngine struct {
 func NewPackage(name string) *Package {
 	return &Package{
 		Name:      name,
-		Globals:   make([]Variable, 0),
+		Globals:   map[string]Variable{},
 		Functions: map[string]*object.Function{},
 	}
 }
@@ -124,11 +125,17 @@ func (engine *ExecutionEngine) Eval(node ast.Node) object.Object {
 	case *ast.ReturnStatement:
 		return engine.EvalReturnStatement(node)
 
+	case *ast.ImportStatement:
+		return engine.EvalImportStatement(node)
+
 	case *ast.FunctionExpression:
 		return engine.EvalFunctionExpression(node)
 
 	case *ast.FunctionCallExpression:
 		return engine.EvalFunctionCallExpression(node)
+
+	case *ast.DotAccessExpression:
+		return engine.EvalDotAccessExpression(node)
 
 	case *ast.ExpressionStatement:
 		return engine.Eval(node.Expression)
@@ -200,6 +207,42 @@ func (engine *ExecutionEngine) EvalReturnStatement(statement *ast.ReturnStatemen
 	return result
 }
 
+func (engine *ExecutionEngine) EvalImportStatement(statement *ast.ImportStatement) object.Object {
+
+	// TODO: implement loading of file
+	// TODO: implement multi packages path
+	for _, pkg := range statement.Packages {
+		packagePath := strings.SplitN(pkg, "/", 1)
+		moduleName := packagePath[0]
+
+		if module, ok := engine.Modules[moduleName]; ok {
+			if len(packagePath) == 1 {
+				packageName := packagePath[0]
+				pkg := module.Packages[packageName]
+
+				globals := map[string]object.Object{}
+				for varName, variable := range pkg.Globals {
+					globals[varName] = variable.Value
+				}
+
+				engine.Variables = append(engine.Variables, Variable{
+					Name: packageName,
+					Value: &object.Package{
+						Name:      packageName,
+						Functions: pkg.Functions,
+						Globals:   globals,
+					},
+				})
+			}
+		} else {
+			return engine.createError(fmt.Sprintf("Module %s does not exist", moduleName))
+		}
+
+	}
+
+	return NULL
+}
+
 func (engine *ExecutionEngine) EvalFunctionExpression(statement *ast.FunctionExpression) object.Object {
 	function := &object.Function{
 		Name:       statement.Name,
@@ -221,10 +264,14 @@ func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.Functio
 		return NULL
 	}
 
+	return engine.evalFunction(function, statement.Parameters)
+}
+
+func (engine *ExecutionEngine) evalFunction(function *object.Function, params []ast.Expression) object.Object {
 	engine.PushStack()
 	// add parameters as variables to current stack
 	for i, parameter := range function.Parameters {
-		paramValue := engine.Eval(statement.Parameters[i])
+		paramValue := engine.Eval(params[i])
 		engine.Variables = append(engine.Variables, Variable{
 			Name:  parameter.Name,
 			Value: paramValue,
@@ -237,6 +284,32 @@ func (engine *ExecutionEngine) EvalFunctionCallExpression(statement *ast.Functio
 	engine.PopStack()
 
 	return result
+}
+
+func (engine *ExecutionEngine) EvalDotAccessExpression(expr *ast.DotAccessExpression) object.Object {
+	objExpr := engine.Eval(expr.Source)
+	if objExpr == NULL {
+		return engine.createError("Source object evaluated to null")
+	}
+
+	if pkg, ok := objExpr.(*object.Package); ok {
+		if variable, ok := expr.Value.(*ast.Identifier); ok {
+			return pkg.Globals[variable.Value]
+		}
+
+		if funcCall, ok := expr.Value.(*ast.FunctionCallExpression); ok {
+			if pkgFuncIdentifier, ok := funcCall.FunctionExpr.(*ast.Identifier); ok {
+				function := pkg.Functions[pkgFuncIdentifier.Value]
+				return engine.evalFunction(function, funcCall.Parameters)
+			} else {
+				return engine.createError("You can only use identifiers for package functions")
+			}
+		}
+
+		return engine.createError("Only globals and functions are allowed to be accessed from a package")
+	} else {
+		return engine.createError("Currently only packages are allowed as dot source")
+	}
 }
 
 func (engine *ExecutionEngine) EvalListExpression(identifier *ast.ListExpression) object.Object {
