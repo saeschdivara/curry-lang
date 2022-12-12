@@ -38,6 +38,12 @@ func main() {
 		}
 
 		engine := evaluator.NewEngine()
+
+		// setup standard library
+		engine.StandardLibraryPath = "standard-library"
+		engine.StandardLibraryModule = "internal"
+		engine.IndexStandardLibrary(engine.StandardLibraryPath)
+
 		evalResult := engine.Eval(program)
 
 		if evalResult != nil {

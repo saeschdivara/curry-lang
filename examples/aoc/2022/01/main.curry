@@ -2,7 +2,7 @@ package main
 
 import (
     "internal/os"
-)
+);
 
 // resolve example
 fn resolveAssignment(filePath) {

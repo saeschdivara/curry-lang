@@ -5,6 +5,7 @@ import (
 	"curryLang/object"
 	"curryLang/token"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -29,8 +30,10 @@ type Module struct {
 }
 
 type ExecutionEngine struct {
-	Variables       []Variable
-	CurrentStackPos []uint32
+	StandardLibraryPath   string
+	StandardLibraryModule string
+	Variables             []Variable
+	CurrentStackPos       []uint32
 
 	Functions map[string]*object.Function
 	Modules   map[string]*Module
@@ -559,6 +562,31 @@ func (engine *ExecutionEngine) EvalIndexAccessExpression(indexAccess *ast.IndexA
 	}
 
 	return sourceList.Value[indexObj.Value]
+}
+
+func (engine *ExecutionEngine) IndexStandardLibrary(path string) error {
+	entries, err := os.ReadDir(path)
+
+	if err != nil {
+		return err
+	}
+
+	module := NewModule(engine.StandardLibraryModule)
+
+	for _, entry := range entries {
+		pkgName := strings.Replace(entry.Name(), ".curry", "", 1)
+		p := path + "/" + pkgName
+		if entry.IsDir() {
+			err := engine.IndexStandardLibrary(p)
+			if err != nil {
+				return err
+			}
+		} else {
+			module.Packages[p] = NewPackage(entry.Name())
+		}
+	}
+
+	return nil
 }
 
 func (engine *ExecutionEngine) createError(message string) *object.Error {
