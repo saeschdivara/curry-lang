@@ -42,9 +42,13 @@ func main() {
 		// setup standard library
 		engine.StandardLibraryPath = "standard-library"
 		engine.StandardLibraryModule = "internal"
-		engine.IndexStandardLibrary(engine.StandardLibraryPath)
+		engine.IndexStandardLibrary(engine.StandardLibraryPath, engine.StandardLibraryModule)
 
 		evalResult := engine.Eval(program)
+
+		if engine.HasError {
+			fmt.Println("Errors during execution ", evalResult)
+		}
 
 		if evalResult != nil {
 			fmt.Println(evalResult.Inspect())

@@ -215,7 +215,7 @@ func (engine *ExecutionEngine) EvalImportStatement(statement *ast.ImportStatemen
 	// TODO: implement loading of file
 	// TODO: implement multi packages path
 	for _, pkg := range statement.Packages {
-		packagePath := strings.SplitN(pkg, "/", 1)
+		packagePath := strings.SplitN(pkg, "/", 2)
 		moduleName := packagePath[0]
 
 		if module, ok := engine.Modules[moduleName]; ok {
@@ -564,7 +564,7 @@ func (engine *ExecutionEngine) EvalIndexAccessExpression(indexAccess *ast.IndexA
 	return sourceList.Value[indexObj.Value]
 }
 
-func (engine *ExecutionEngine) IndexStandardLibrary(path string) error {
+func (engine *ExecutionEngine) IndexStandardLibrary(path string, modulePrefix string) error {
 	entries, err := os.ReadDir(path)
 
 	if err != nil {
@@ -577,14 +577,16 @@ func (engine *ExecutionEngine) IndexStandardLibrary(path string) error {
 		pkgName := strings.Replace(entry.Name(), ".curry", "", 1)
 		p := path + "/" + pkgName
 		if entry.IsDir() {
-			err := engine.IndexStandardLibrary(p)
+			err := engine.IndexStandardLibrary(p, modulePrefix)
 			if err != nil {
 				return err
 			}
 		} else {
-			module.Packages[p] = NewPackage(entry.Name())
+			module.Packages[pkgName] = NewPackage(entry.Name())
 		}
 	}
+
+	engine.Modules[engine.StandardLibraryModule] = module
 
 	return nil
 }
